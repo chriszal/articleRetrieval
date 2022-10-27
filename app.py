@@ -37,11 +37,23 @@ def get_db():
     #.. Add all the topics we want to have
     collection_sd_name = db["source_domain_name"]
     collection_users = db["users"]
-
     return db
+
+#TODO-close the db connection ( hint use decorators on events)
+# @app.on_event("startup")
+# def startup_db_client():
+#     app.mongodb_client = MongoClient(host='mongodb_container',
+#                          port=27017,
+#                          username='root',
+#                          password='rootpassword')
+#     app.database = app.mongodb_client["articles_keywords_db"]
+#     print("Connected to the MongoDB database!")
+# @app.on_event("shutdown")
+# def shutdown_db_client():
+#     app.mongodb_client.close()
+
 
 if __name__ == "__main__":
     #Creating a new connection with mongo
     db = get_db()
-
     app.run(port=8080, host="0.0.0.0")
