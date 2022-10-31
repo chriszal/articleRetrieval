@@ -1,10 +1,20 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from pymongo import MongoClient
+import os
+import time as ts
 
 #Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
 
 #controllers implementations
+
+@app.route('/')
+def index():
+    return jsonify(
+        status=True,
+        message='Welcome !'
+    )
+
 @app.get("/user/articles/<int:user_id>")
 def fetch_users_articles_controller():
     return "<p>Return users articles bases on id of fail if invalid user id is provided</p>"
@@ -12,7 +22,16 @@ def fetch_users_articles_controller():
 
 @app.post("/create/user")
 def create_user_controller():
-    return "<p>here a new user should be added to the db with the keywords that he is interested in</p>"
+    data = request.get_json()
+    data["timestamp"]=ts.time()
+    
+
+    db.user.insert_one(data)
+
+    return jsonify(
+        status=True,
+        message='User saved successfully!'+str(data)
+    ), 201
 
 
 @app.put("/edit/user/keywords/<int:user_id>")
@@ -57,3 +76,4 @@ if __name__ == "__main__":
     #Creating a new connection with mongo
     db = get_db()
     app.run(port=8080, host="0.0.0.0")
+
