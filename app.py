@@ -1,12 +1,12 @@
+
 from flask import Flask, request, jsonify
-from pymongo import MongoClient
-import os
-import time as ts
+from assets.users import User
 
 #Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
 
 #controllers implementations
+user = User()
 
 @app.route('/')
 def index():
@@ -23,40 +23,24 @@ def fetch_users_articles_controller():
 @app.post("/create/user")
 def create_user_controller():
     data = request.get_json()
-    data["timestamp"]=ts.time()
-    
+    print(data["email"])
+    response = user.create(data)
 
-    db.user.insert_one(data)
-
-    return jsonify(
-        status=True,
-        message='User saved successfully!'+str(data)
-    ), 201
+    return  response, 201
 
 
-@app.put("/edit/user/keywords/<int:user_id>")
-def add_new_user_controller():
-    return "<p>imp[lement a solution where we can edit the users keywords</p>"
+@app.put("/edit/user/keywords/<string:email>")
+def add_new_user_controller(email):
+    data = request.get_json()
+    response = user.update(email, data)
+    return response, 201
 
-@app.delete("/delete/user")
-def delete_user_controller():
-    return "<p>delete a user from the collection</p>"
+@app.delete("/delete/user/<string:email>")
+def delete_user_controller(email):
+    count = user.delete(email)
+    return "Deleted entities: "+str(count)
 
-def get_db():
-    client = MongoClient(host='mongodb_container',
-                         port=27017,
-                         username='root',
-                         password='rootpassword')
 
-    db = client["articles_keywords_db"]
-
-    #creating our collections( For some reason if we dont add an item it will not show when you call db.list_collection_names()
-    #But at the same times its created and ready to use
-    colection_f1 = db["motosport"]
-    #.. Add all the topics we want to have
-    collection_sd_name = db["source_domain_name"]
-    collection_users = db["users"]
-    return db
 
 #TODO-close the db connection ( hint use decorators on events)
 # @app.on_event("startup")
@@ -74,6 +58,5 @@ def get_db():
 
 if __name__ == "__main__":
     #Creating a new connection with mongo
-    db = get_db()
     app.run(port=8080, host="0.0.0.0")
 
