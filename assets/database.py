@@ -9,7 +9,7 @@ class Database(object):
         self.client = MongoClient(host='mongodb_container',
                          port=27017,
                          username='',
-                         password='') # configure db url
+                         password='') 
         self.db = self.client["articles_keywords_db"]  # configure db name
 
     def insert(self, element, collection_name):

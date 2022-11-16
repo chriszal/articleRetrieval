@@ -1,12 +1,14 @@
 
 from flask import Flask, request, jsonify
 from assets.users import User
+from apis.newsapi import NewsApi
 
 #Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
 
 #controllers implementations
 user = User()
+news=NewsApi()
 
 @app.route('/')
 def index():
@@ -23,7 +25,6 @@ def fetch_users_articles_controller():
 @app.post("/create/user")
 def create_user_controller():
     data = request.get_json()
-    print(data["email"])
     response = user.create(data)
 
     return  response, 201
@@ -59,4 +60,6 @@ def delete_user_controller(email):
 if __name__ == "__main__":
     #Creating a new connection with mongo
     app.run(port=8080, host="0.0.0.0")
+    
+
 
