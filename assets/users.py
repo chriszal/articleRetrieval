@@ -14,17 +14,17 @@ class User(object):
 
     def create(self, user):
         # Validator will throw error if invalid
-        res = self.db.insert(user, self.collection_name)
+        res = self.db.insert_user(user, self.collection_name)
         return res
 
-    def find(self, user):  # find all
-        return self.db.find(user, self.collection_name)
+    def find(self, user):  # find_user all
+        return self.db.find_user(user, self.collection_name)
 
     def find_by_email(self, email):
         return self.db.find_by_id(email, self.collection_name)
 
     def update(self, email, user):
-        return self.db.update(email, user,self.collection_name)
+        return self.db.update_user(email, user, self.collection_name)
 
     def delete(self, email):
-        return self.db.delete(email, self.collection_name)
+        return self.db.delete_user(email, self.collection_name)

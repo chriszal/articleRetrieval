@@ -14,4 +14,4 @@ while you are in the docker folder type
    - docker-compose -p <project name> -f docker-compose.yml up --build -d
    
 2. To stop and clean-up
-   - docker compose -p  testserver down 
+   - docker compose -p  <project name> down 
