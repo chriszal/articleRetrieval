@@ -1,16 +1,26 @@
 from flask import Flask, jsonify, request
 from assets.users import User
 from apis.newsapi import NewsApi
+from kafka_bus.producer import Producer
 from assets.database import Database
+import time
 from assets.ArticleSDDescriptions import SourceDomainDescriptions
-import jellyfish
+# import jellyfish
 
 # Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
 
+TOPICS= ["agricuture",
+        "bussines",
+        "elon musk",
+        "motosport",
+        "science",
+        "space",
+        "technology",
+        "war"]
 # controllers implementations
 user = User()
-news = NewsApi()
+producer = Producer()
 db = Database()
 sourceDomainDesc = SourceDomainDescriptions()
 
@@ -21,54 +31,54 @@ def index():
         message='Welcome !'
     )
 
-@app.get("/keyword/articles/<string:keyword>")
-def fetch_users_articles_controller(user_keyword):
-    """
-    :param keyword:
-    :return: The articles that corespond to this keyword
+# @app.get("/keyword/articles/<string:keyword>")
+# def fetch_users_articles_controller(user_keyword):
+#     """
+#     :param keyword:
+#     :return: The articles that corespond to this keyword
 
-    :Note: The available keywords the user can enter here are
-      [
-        agricuture,
-        bussines,
-        elon musk,
-        motosport,
-        science,
-        space,
-        tech,
-        war
-    """
-    keywords = [
-        "agricuture",
-        "bussines",
-        "elon musk",
-        "motosport",
-        "science",
-        "space",
-        "technology",
-        "war"
-    ]
+#     :Note: The available keywords the user can enter here are
+#       [
+#         agricuture,
+#         bussines,
+#         elon musk,
+#         motosport,
+#         science,
+#         space,
+#         tech,
+#         war
+#     """
+#     keywords = [
+#         "agricuture",
+#         "bussines",
+#         "elon musk",
+#         "motosport",
+#         "science",
+#         "space",
+#         "technology",
+#         "war"
+#     ]
 
-    for keyword in keywords:
+#     for keyword in keywords:
 
-        #Cosine similarity of the true title and the candidate
-        if jellyfish.jaro_distance(keyword, user_keyword) >= 0.85:
-            response = db.find_articles(user_keyword)
-            return response, 201
+#         #Cosine similarity of the true title and the candidate
+#         if jellyfish.jaro_distance(keyword, user_keyword) >= 0.85:
+#             response = db.find_articles(user_keyword)
+#             return response, 201
 
-    return "There are no anvailable records for the given keyword, please use one that is supported and try again", 500
+#     return "There are no anvailable records for the given keyword, please use one that is supported and try again", 500
 
-@app.get("/source/description/<string:sourcedomainname>")
-def fetch_users_articles_controller(sourcedomainname):
-    #TODO- actual api response
-    #Cosine similarity of the true title and the candidate
-    response = sourceDomainDesc.fetch_domain_descriptionzç(sourcedomainname)
-    return response
+# @app.get("/source/description/<string:sourcedomainname>")
+# def fetch_users_articles_controller(sourcedomainname):
+#     #TODO- actual api response
+#     #Cosine similarity of the true title and the candidate
+#     response = sourceDomainDesc.fetch_domain_descriptionzç(sourcedomainname)
+#     return response
 
 
-@app.get("/user/articles/<int:user_id>")
-def fetch_users_articles_controller():
-    return "<p>Return users articles bases on id of fail if invalid user id is provided</p>"
+# @app.get("/user/articles/<int:user_id>")
+# def fetch_users_articles_controller():
+#     return "<p>Return users articles bases on id of fail if invalid user id is provided</p>"
 
 @app.post("/create/user")
 def create_user_controller():
@@ -91,3 +101,7 @@ def delete_user_controller(email):
 if __name__ == "__main__":
     # Creating a new connection with mongo
     app.run(port=8080, host="0.0.0.0")
+    while True:
+        for topic in TOPICS:
+            producer.publish_articles_on_topic(topic)
+        time.sleep(7200)

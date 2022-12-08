@@ -12,11 +12,16 @@ class Consumer():
             value_deserializer=lambda x: loads(x),
             group_id="my-group",)
 
-        self.consumer.subscribe(TOPICS)
+        self.consumer.subscribe(TOPICS+["sources"])
+        self.keywords = TOPICS
 
-    def save_to_mongo(self,event):
-        for event in self.consumer:
-            event_data = event.value
-            # Do whatever you want
-            print(event_data)
-            sleep(2)
+    def save_to_mongo(self):
+        for message in self.consumer:
+            if message.topic in self.keywords:
+                collection = message.value
+                # collection = db[message.topic]
+                # collection.insert_one(message.value)
+            elif message.topic == 'sources':
+                sources= message.value
+                # sources = db['sources']
+                # sources.insert_one(message.value)
