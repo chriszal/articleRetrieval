@@ -1,5 +1,7 @@
 newsapi-python
 flask
-mongoengine
+pymongo
 kafka-python
+Flask-PyMongo
+requests
 pymediawiki
