@@ -4,12 +4,26 @@ from bson import ObjectId
 
 
 class Database(object):
+
     def __init__(self):
         self.client = MongoClient(host='mongodb_container',
                          port=27017,
-                         username='',
-                         password='')
+                         username='root',
+                         password='rootpass')
+
         self.db = self.client["articles_keywords_db"]  #configure db name
+
+        #initializing the collections
+        self.ArticlesSDDescription = self.db["sourceDomainName"]
+
+        self.keywords = self.db["keywords"]
+        
+        self.users = self.db["users"]
+
+
+    # def insert(self, collection):
+        
+
 
     # User functions
     def insert_user(self, element, collection_name):

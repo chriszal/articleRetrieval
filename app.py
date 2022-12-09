@@ -1,19 +1,33 @@
 from flask import Flask, jsonify, request
+<<<<<<< HEAD
 from assets.users import User
 from kafka_bus.producer import Producer
 from kafka_bus.consumer import Consumer
 from kafka_bus.kafkaProducerThread import KafkaProducerThread
 from kafka_bus.kafkaConsumerThread import KafkaConsumerThread
+=======
+>>>>>>> feature/mongo_setup
 from assets.database import Database
+import jellyfish
 import time
+<<<<<<< HEAD
 import threading
 import logging
 from assets.ArticleSDDescriptions import SourceDomainDescriptions
 # import jellyfish
+=======
+import datetime
+# Mongo imports
+from pymongo import MongoClient
+from assets.models import Users
+# Flask imports
+from flask import Flask, jsonify, request
+>>>>>>> feature/mongo_setup
 
 # Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
 
+<<<<<<< HEAD
 TOPICS= ["agricuture",
         "health",
         "business",
@@ -24,22 +38,39 @@ TOPICS= ["agricuture",
         "war"]
 # controllers implementations
 user = User()
+=======
+>>>>>>> feature/mongo_setup
 db = Database()
-sourceDomainDesc = SourceDomainDescriptions()
+
 
 @app.route('/')
 def index():
+    user = {
+        "keywords": ["test", "test2"],
+        "email": "test@gmail.com",
+        "created": datetime.datetime,
+        "city": "Testssssasdbasud"
+    }
+
+    user = Users(**user)
+
+    insert_result = db.users.insert_one(user.to_bson())
+
+    print(insert_result)
+    print(user.to_bson())
+
     return jsonify(
         status=True,
         message='Welcome !'
     )
+
 
 # @app.get("/keyword/articles/<string:keyword>")
 # def fetch_users_articles_controller(user_keyword):
 #     """
 #     :param keyword:
 #     :return: The articles that corespond to this keyword
-
+#
 #     :Note: The available keywords the user can enter here are
 #       [
 #         agricuture,
@@ -61,14 +92,14 @@ def index():
 #         "technology",
 #         "war"
 #     ]
-
+#
 #     for keyword in keywords:
-
+#
 #         #Cosine similarity of the true title and the candidate
 #         if jellyfish.jaro_distance(keyword, user_keyword) >= 0.85:
 #             response = db.find_articles(user_keyword)
 #             return response, 201
-
+#
 #     return "There are no anvailable records for the given keyword, please use one that is supported and try again", 500
 
 # @app.get("/source/description/<string:sourcedomainname>")
@@ -77,11 +108,12 @@ def index():
 #     #Cosine similarity of the true title and the candidate
 #     response = sourceDomainDesc.fetch_domain_descriptionzç(sourcedomainname)
 #     return response
-
-
+#
+#
 # @app.get("/user/articles/<int:user_id>")
 # def fetch_users_articles_controller():
 #     return "<p>Return users articles bases on id of fail if invalid user id is provided</p>"
+<<<<<<< HEAD
 
 @app.get('/articles/<email>')
 def get_articles(email):
@@ -112,6 +144,26 @@ def add_new_user_controller(email):
 def delete_user_controller(email):
     count = user.delete(email)
     return "Deleted entities: " + str(count)
+=======
+#
+# @app.post("/create/user")
+# def create_user_controller():
+#     data = request.get_json()
+#     response = user.create(data)
+#
+#     return response, 201
+#
+# @app.put("/edit/user/keywords/<string:email>")
+# def add_new_user_controller(email):
+#     data = request.get_json()
+#     response = user.update(email, data)
+#     return response, 201
+#
+# @app.delete("/delete/user/<string:email>")
+# def delete_user_controller(email):
+#     count = user.delete(email)
+#     return "Deleted entities: " + str(count)
+>>>>>>> feature/mongo_setup
 
 def run_producer():
     producer = Producer()
