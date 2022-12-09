@@ -1,33 +1,16 @@
 from flask import Flask, jsonify, request
-<<<<<<< HEAD
-from assets.users import User
-from kafka_bus.producer import Producer
-from kafka_bus.consumer import Consumer
 from kafka_bus.kafkaProducerThread import KafkaProducerThread
 from kafka_bus.kafkaConsumerThread import KafkaConsumerThread
-=======
->>>>>>> feature/mongo_setup
 from assets.database import Database
-import jellyfish
 import time
-<<<<<<< HEAD
-import threading
 import logging
-from assets.ArticleSDDescriptions import SourceDomainDescriptions
 # import jellyfish
-=======
 import datetime
-# Mongo imports
-from pymongo import MongoClient
 from assets.models import Users
-# Flask imports
-from flask import Flask, jsonify, request
->>>>>>> feature/mongo_setup
 
 # Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
 
-<<<<<<< HEAD
 TOPICS= ["agricuture",
         "health",
         "business",
@@ -37,9 +20,7 @@ TOPICS= ["agricuture",
         "technology",
         "war"]
 # controllers implementations
-user = User()
-=======
->>>>>>> feature/mongo_setup
+
 db = Database()
 
 
@@ -113,38 +94,37 @@ def index():
 # @app.get("/user/articles/<int:user_id>")
 # def fetch_users_articles_controller():
 #     return "<p>Return users articles bases on id of fail if invalid user id is provided</p>"
-<<<<<<< HEAD
 
-@app.get('/articles/<email>')
-def get_articles(email):
-    # Start the consumer thread for the user
-    consumer_thread = KafkaConsumerThread(email)
-    consumer_thread.start()
+# @app.get('/articles/<email>')
+# def get_articles(email):
+#     # Start the consumer thread for the user
+#     consumer_thread = KafkaConsumerThread(email)
+#     consumer_thread.start()
 
-    # Wait for the consumer thread to finish
-    consumer_thread.join()
+#     # Wait for the consumer thread to finish
+#     consumer_thread.join()
 
-    # Return the articles to the user
-    return consumer_thread.result
+#     # Return the articles to the user
+#     return consumer_thread.result
 
-@app.post("/create/user")
-def create_user_controller():
-    data = request.get_json()
-    response = user.create(data)
+# @app.post("/create/user")
+# def create_user_controller():
+#     data = request.get_json()
+#     response = user.create(data)
 
-    return response, 201
+#     return response, 201
 
-@app.put("/edit/user/keywords/<string:email>")
-def add_new_user_controller(email):
-    data = request.get_json()
-    response = user.update(email, data)
-    return response, 201
+# @app.put("/edit/user/keywords/<string:email>")
+# def add_new_user_controller(email):
+#     data = request.get_json()
+#     response = user.update(email, data)
+#     return response, 201
 
-@app.delete("/delete/user/<string:email>")
-def delete_user_controller(email):
-    count = user.delete(email)
-    return "Deleted entities: " + str(count)
-=======
+# @app.delete("/delete/user/<string:email>")
+# def delete_user_controller(email):
+#     count = user.delete(email)
+#     return "Deleted entities: " + str(count)
+
 #
 # @app.post("/create/user")
 # def create_user_controller():
@@ -163,27 +143,14 @@ def delete_user_controller(email):
 # def delete_user_controller(email):
 #     count = user.delete(email)
 #     return "Deleted entities: " + str(count)
->>>>>>> feature/mongo_setup
-
-def run_producer():
-    producer = Producer()
-    while True:
-        for topic in TOPICS:
-            logging.warning(topic)
-            producer.publish_articles_on_topic(topic)
-        time.sleep(10)
-
-def run_consumer():
-    consumer = Consumer(TOPICS)
-    consumer.save_to_mongo()
 
 if __name__ == "__main__":
     # Creating a new connection with mongo
     app.run(port=8080, host="0.0.0.0")
     
-    producer_thread = KafkaProducerThread()
+    producer_thread = KafkaProducerThread(TOPICS)
     producer_thread.start()
-    consumer_thread = KafkaConsumerThread()
+    consumer_thread = KafkaConsumerThread(TOPICS)
     consumer_thread.start()
     # threading.Thread(target=run_producer).start()
     # threading.Thread(target=run_consumer).start()

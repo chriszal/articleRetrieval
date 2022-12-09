@@ -3,58 +3,29 @@ from threading import Thread
 from flask import jsonify
 
 class KafkaConsumerThread(Thread):
-    def __init__(self):
+    def __init__(self,TOPICS):
         Thread.__init__(self)
-        self.TOPICS = ["agricuture",
-            "health",
-            "business",
-            "motosport",
-            "science",
-            "space",
-            "technology",
-            "war"]
+        self.topics = TOPICS
 
     def run(self):
-        # Initialize an empty list to store the articles
-        articles = []
+        
+        for topic in self.topics:
 
-        # Iterate over the keywords
-        for keyword in self.TOPICS:
-            # Initialize the Kafka consumer for the keyword's topic
             consumer = KafkaConsumer(bootstrap_servers=['localhost:9092'],
                 auto_offset_reset='earliest',
                 enable_auto_commit=True)
-            consumer.subscribe(keyword)
+
+            consumer.subscribe(topic)
+
             # Iterate over the messages in the topic
             for message in consumer:
-                # Get the article
-                article = message.value
-
-                # Get the source domain name
-                source_domain = article['source']
-
-                # Search for information about the source on Wikipedia
-                # search_wikipedia(source_domain)
-
-                # # Check if the article is relevant to the user (i.e. matches the user's keywords and city)
-                # if set(self.TOPICS).issubset(article['keywords']) and city == article['city']:
-                #     # Add the article to the list
-                #     articles.append(article)
+               # Save articles in corresponding MongoDB collection
+                mongo[topic].insert_one(message.value)
 
         # Initialize the Kafka consumer for the sources topic
         consumer = KafkaConsumer('sources', bootstrap_servers=['localhost:9092'], auto_offset_reset='earliest')
 
-        # Iterate over the messages in the topic
         for message in consumer:
-            # Get the source description
-            description = message.value
+            # Save source domain name information in "sources" collection
+            mongo["sources"].insert_one(message.value)
 
-            # Find the article with the corresponding source domain name
-            article = next((a for a in articles if a['source']['domain'] == description['domain']), None)
-
-            # If the article was found, add the description to it
-            if article is not None:
-                article['source']['description'] = description
-
-        # Return the articles to the user
-        # return jsonify(articles), 200
