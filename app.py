@@ -1,9 +1,13 @@
 from flask import Flask, jsonify, request
 from assets.users import User
-from apis.newsapi import NewsApi
 from kafka_bus.producer import Producer
+from kafka_bus.consumer import Consumer
+from kafka_bus.kafkaProducerThread import KafkaProducerThread
+from kafka_bus.kafkaConsumerThread import KafkaConsumerThread
 from assets.database import Database
 import time
+import threading
+import logging
 from assets.ArticleSDDescriptions import SourceDomainDescriptions
 # import jellyfish
 
@@ -11,8 +15,8 @@ from assets.ArticleSDDescriptions import SourceDomainDescriptions
 app = Flask(__name__)
 
 TOPICS= ["agricuture",
-        "bussines",
-        "elon musk",
+        "health",
+        "business",
         "motosport",
         "science",
         "space",
@@ -20,7 +24,6 @@ TOPICS= ["agricuture",
         "war"]
 # controllers implementations
 user = User()
-producer = Producer()
 db = Database()
 sourceDomainDesc = SourceDomainDescriptions()
 
@@ -80,6 +83,18 @@ def index():
 # def fetch_users_articles_controller():
 #     return "<p>Return users articles bases on id of fail if invalid user id is provided</p>"
 
+@app.get('/articles/<email>')
+def get_articles(email):
+    # Start the consumer thread for the user
+    consumer_thread = KafkaConsumerThread(email)
+    consumer_thread.start()
+
+    # Wait for the consumer thread to finish
+    consumer_thread.join()
+
+    # Return the articles to the user
+    return consumer_thread.result
+
 @app.post("/create/user")
 def create_user_controller():
     data = request.get_json()
@@ -98,10 +113,24 @@ def delete_user_controller(email):
     count = user.delete(email)
     return "Deleted entities: " + str(count)
 
+def run_producer():
+    producer = Producer()
+    while True:
+        for topic in TOPICS:
+            logging.warning(topic)
+            producer.publish_articles_on_topic(topic)
+        time.sleep(10)
+
+def run_consumer():
+    consumer = Consumer(TOPICS)
+    consumer.save_to_mongo()
+
 if __name__ == "__main__":
     # Creating a new connection with mongo
     app.run(port=8080, host="0.0.0.0")
-    while True:
-        for topic in TOPICS:
-            producer.publish_articles_on_topic(topic)
-        time.sleep(7200)
+    
+    producer_thread = KafkaProducerThread()
+    producer_thread.start()
+    # threading.Thread(target=run_producer).start()
+    # threading.Thread(target=run_consumer).start()
+    
