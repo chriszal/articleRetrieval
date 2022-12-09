@@ -144,6 +144,37 @@ def index():
 #     count = user.delete(email)
 #     return "Deleted entities: " + str(count)
 
+
+@app.get('/users/<string:email>')
+def get_user_articles(email):
+    # get the user's preferences
+    user = db.users.find_one({'_id': email})
+
+    # create a dictionary to hold the articles grouped by source
+    sources = {}
+
+    # get the articles for each keyword the user is interested in
+    for keyword in user['keywords']:
+
+        # get the articles from the corresponding topic collection
+        articles = list(db.keywords.find())
+
+        # group the articles by source
+        for article in articles:
+            source = article['source']
+            if source not in sources:
+                sources[source] = []
+            sources[source].append(article)
+
+    # for each source, get its description from the sources collection if available
+    for source, articles in sources.items():
+        description = sources.find_one({'_id': source})
+        if description:
+            sources[source]['description'] = description['description']
+
+    # return the articles grouped by source
+    return jsonify(sources)
+
 if __name__ == "__main__":
     # Creating a new connection with mongo
     app.run(port=8080, host="0.0.0.0")
