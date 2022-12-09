@@ -131,6 +131,8 @@ if __name__ == "__main__":
     
     producer_thread = KafkaProducerThread()
     producer_thread.start()
+    consumer_thread = KafkaConsumerThread()
+    consumer_thread.start()
     # threading.Thread(target=run_producer).start()
     # threading.Thread(target=run_consumer).start()
     

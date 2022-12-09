@@ -3,9 +3,8 @@ from threading import Thread
 from flask import jsonify
 
 class KafkaConsumerThread(Thread):
-    def __init__(self, user_id):
+    def __init__(self):
         Thread.__init__(self)
-        self.user_id = user_id
         self.TOPICS = ["agricuture",
             "health",
             "business",
@@ -58,4 +57,4 @@ class KafkaConsumerThread(Thread):
                 article['source']['description'] = description
 
         # Return the articles to the user
-        return jsonify(articles), 200
+        # return jsonify(articles), 200
