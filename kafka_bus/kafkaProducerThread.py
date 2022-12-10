@@ -23,11 +23,12 @@ class KafkaProducerThread(Thread):
             for topic in self.topics:
                 articles = self.news_api.get_articles(topic)
                 for article in articles:
-                    producer.send(topic,article)
-                    source_info = self.media_api.get_source_domain_info(article["source"])
-                    if source_info:
-                        # Publish source domain name information to "sources" topic
-                        producer.send("sources", value=source_info)
+                    if article:
+                        producer.send(topic,article)
+                        source_info = self.media_api.get_source_domain_info(article["source"])
+                        if source_info:
+                            # Publish source domain name information to "sources" topic
+                            producer.send("sources", value=source_info)
 
             # Flush the producer to ensure all messages are sent
             producer.flush()

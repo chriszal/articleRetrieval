@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request
 from kafka_bus.kafkaProducerThread import KafkaProducerThread
 from kafka_bus.kafkaConsumerThread import KafkaConsumerThread
 from assets.database import Database
+from apis.mediawiki import MediaWikiApi
+from apis.newsapi import NewsApi
 import time
 import logging
 # import jellyfish
@@ -11,6 +13,8 @@ from assets.models import Users
 # Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
 
+news_api = NewsApi()
+media_api = MediaWikiApi()
 TOPICS= ["agricuture",
         "health",
         "business",
@@ -143,6 +147,21 @@ def index():
 # def delete_user_controller(email):
 #     count = user.delete(email)
 #     return "Deleted entities: " + str(count)
+@app.get('/fetch')
+def fetch_source():
+
+    object=[]
+    for topic in TOPICS:
+        articles = news_api.get_articles(topic)
+        for article in articles:
+            # producer.send(topic,article)
+            source_info = media_api.get_source_domain_info(article["source"])
+            if source_info:
+                # Publish source domain name information to "sources" topic
+                # producer.send("sources", value=source_info)
+                object.append(source_info)
+        
+    return jsonify(object)
 
 
 @app.get('/users/<string:email>')
@@ -157,7 +176,7 @@ def get_user_articles(email):
     for keyword in user['keywords']:
 
         # get the articles from the corresponding topic collection
-        articles = list(db.keywords.find())
+        articles = list(db.keywords.find(keyword))
 
         # group the articles by source
         for article in articles:
