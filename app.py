@@ -15,10 +15,10 @@ app = Flask(__name__)
 
 news_api = NewsApi()
 media_api = MediaWikiApi()
-TOPICS= ["agricuture",
+TOPICS= ["education",
         "health",
         "business",
-        "motosport",
+        "motorsport",
         "science",
         "space",
         "technology",
@@ -149,17 +149,23 @@ def index():
 #     return "Deleted entities: " + str(count)
 @app.get('/fetch')
 def fetch_source():
-
+    domains=[]
     object=[]
     for topic in TOPICS:
         articles = news_api.get_articles(topic)
         for article in articles:
-            # producer.send(topic,article)
-            source_info = media_api.get_source_domain_info(article["source"])
-            if source_info:
-                # Publish source domain name information to "sources" topic
-                # producer.send("sources", value=source_info)
-                object.append(source_info)
+            if article['source'] is not '':
+                if article['source'] not in domains:
+                    domains.append(article['source'])
+                # producer.send(topic,article)
+    
+    for domain in domains:
+        source_info = media_api.get_source_domain_info(domain)
+        if source_info:
+            # producer.send("sources", value=source_info)
+            object.append(source_info)
+        else:
+            object.append('')
         
     return jsonify(object)
 

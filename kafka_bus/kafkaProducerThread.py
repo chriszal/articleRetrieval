@@ -20,16 +20,20 @@ class KafkaProducerThread(Thread):
         # Function to call the News API and publish the retrieved articles to the corresponding Kafka topic
         def call_apis():
             # Iterate over the keywords
-            for topic in self.topics:
+            domains=[]
+            for topic in self.TOPICS:
                 articles = self.news_api.get_articles(topic)
                 for article in articles:
-                    if article:
+                    if article['source'] is not '':
+                        if article['source'] not in domains:
+                            domains.append(article['source'])
                         producer.send(topic,article)
-                        source_info = self.media_api.get_source_domain_info(article["source"])
-                        if source_info:
-                            # Publish source domain name information to "sources" topic
-                            producer.send("sources", value=source_info)
-
+            
+            for domain in domains:
+                source_info = self.media_api.get_source_domain_info(domain)
+                if source_info:
+                    producer.send("sources", value=source_info)
+                    
             # Flush the producer to ensure all messages are sent
             producer.flush()
 
