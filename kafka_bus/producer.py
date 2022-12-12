@@ -10,7 +10,5 @@ class Producer():
             value_serializer=lambda x: dumps(x).encode('utf-8'))
         self.news_articles = NewsApi()
 
-
-    def publish_articles_on_topic(self,topic):
-        self.producer.send(topic,self.news_articles.get_articles(topic))
-
+    def publish_articles_on_topic(self, topic):
+        self.producer.send(topic, self.news_articles.get_articles(topic))

@@ -6,10 +6,16 @@ from datetime import datetime
 from beanie import Document
 
 class Users(Document):
-    Keywords: list
-    email: str
-    created: str #'2032-04-23T10:20:30.400+02:30'
-    city: str
+    Keywords = []
+    email = ''
+    created = ''
+    city=''
+
+    def __int__(self, keywords, email, created, city):
+        self.Keywords = keywords
+        self.email = email
+        self.created = created
+        self.city = city
 
     def to_bson(self):
         data = self.dict(by_alias=True, exclude_none=True)

@@ -19,19 +19,11 @@ class Database(object):
         self.db = self.client["articles_keywords_db"]  # configure db name
 
         # initializing the collections
-        self.ArticlesSDDescription = self.db["sourceDomainName"]
+        self.ArticlesSDDescription = self.db.create_collection("sourceDomainName", check_exists=True)
 
-        self.keywords = self.db["keywords"]
+        self.keywords = self.db.create_collection("keywords", check_exists=True)
 
-        self.users = self.db["users"]
-
-        # Create Motor client
-        client = AsyncIOMotorClient("mongodb://root:rootpass@localhost:27017")
-
-        # Init beanie with the Product document class
-        await init_beanie(database=client.db_name, document_models=[Users, Keywords, ArticleSDDescription])
-
-
+        self.users = self.db.create_collection("users", check_exists=True)
 
     # User functions
     def insert_user(self, element, collection_name):
