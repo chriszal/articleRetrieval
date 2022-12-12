@@ -8,11 +8,21 @@ from pymongo import MongoClient
 from assets.models import Users
 # Flask imports
 from flask import Flask, jsonify, request
+from assets.models import Users, Keywords, ArticleSDDescription
+from motor.motor_asyncio import AsyncIOMotorClient
+from beanie import init_beanie
 
 # Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
 
-db = Database()
+# db = Database()
+# Call this from within your event loop to get beanie setup.
+async def init():
+    # Create Motor client
+    client = AsyncIOMotorClient("mongodb://root:rootpass@localhost:27017")
+
+    # Init beanie with the Product document class
+    await init_beanie(database=client.db_name, document_models=[Users, Keywords, ArticleSDDescription])
 
 
 @app.route('/')
@@ -20,16 +30,16 @@ def index():
     user = {
         "keywords": ["test", "test2"],
         "email": "test@gmail.com",
-        "created": datetime.datetime,
+        "created": "test",
         "city": "Testssssasdbasud"
     }
 
     user = Users(**user)
 
-    insert_result = db.users.insert_one(user.to_bson())
+    # insert_result = db.users.insert_one(user)
 
-    print(insert_result)
-    print(user.to_bson())
+    # print(insert_result)
+    # print(user.to_bson())
 
     return jsonify(
         status=True,
@@ -107,7 +117,8 @@ def index():
 if __name__ == "__main__":
     # Creating a new connection with mongo
     app.run(port=8080, host="0.0.0.0")
-    while True:
-        for topic in TOPICS:
-            producer.publish_articles_on_topic(topic)
-        time.sleep(7200)
+    init()
+    # while True:
+    #     for topic in TOPICS:
+    #         producer.publish_articles_on_topic(topic)
+    #     time.sleep(7200)

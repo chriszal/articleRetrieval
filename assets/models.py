@@ -3,11 +3,12 @@ from typing import (
     Deque, Dict, FrozenSet, List, Optional, Sequence, Set, Tuple, Union
 )
 from datetime import datetime
+from beanie import Document
 
-class Users(BaseModel):
+class Users(Document):
     Keywords: list
     email: str
-    created: datetime #'2032-04-23T10:20:30.400+02:30'
+    created: str #'2032-04-23T10:20:30.400+02:30'
     city: str
 
     def to_bson(self):
@@ -16,7 +17,7 @@ class Users(BaseModel):
             data.pop("_id")
         return data
 
-class Keywords(BaseModel):
+class Keywords(Document):
     #TODO- later define the structre of this "object" in reality its an article
     agriculture: List[object]
     business: List[object]
@@ -27,7 +28,7 @@ class Keywords(BaseModel):
     war: List[object]
     motosport: List[object]
 
-class ArticleSDDescription(BaseModel):
+class ArticleSDDescription(Document):
     source: Dict[str, str] = None
     description: str = None
 
