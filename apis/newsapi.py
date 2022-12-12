@@ -6,7 +6,7 @@ class NewsApi():
         self.secret = "2a2624e83ecb4b7f9a3e8bc1798d6946"
 
     def get_articles(self,keyword):
-        response = requests.get("https://newsapi.org/v2/everything",params={'q':keyword,'apiKey': self.secret })
+        response = requests.get("https://newsapi.org/v2/everything",params={'q':keyword,'apiKey': self.secret ,'language':'en'})
         if response.status_code == 200:
             response_dict = response.json()
             articles=[]
@@ -15,9 +15,11 @@ class NewsApi():
                 source = article['source']['name']
                 articles.append({'source':source,'article':article['content']})
         
+            if not articles:
+                articles = [{'source': '', 'article': ''}]
             return articles
         else:
-            return None
+            return [{'source': '', 'article': ''}]
         
     #     articles =[]
     # for keyword in keywords:

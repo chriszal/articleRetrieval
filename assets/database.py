@@ -81,3 +81,10 @@ class Database(object):
     # Keyword functions
     def find_articles(self, collection_name, limit=0):  ##TODO -possible bug :)
         return self.db[collection_name].find(limit=limit)
+
+    def insert_article(self, element, collection_name):
+
+        inserted = self.db[collection_name].insert_one(element)  # insert_user data to db
+
+
+

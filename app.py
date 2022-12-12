@@ -1,17 +1,30 @@
 from flask import Flask, jsonify, request
+from kafka_bus.kafkaProducerThread import KafkaProducerThread
+from kafka_bus.kafkaConsumerThread import KafkaConsumerThread
 from assets.database import Database
-import jellyfish
+from apis.mediawiki import MediaWikiApi
+from apis.newsapi import NewsApi
 import time
+import logging
+# import jellyfish
 import datetime
-# Mongo imports
-from pymongo import MongoClient
 from assets.models import Users
-# Flask imports
-from flask import Flask, jsonify, request
 
 
 # Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
+
+news_api = NewsApi()
+media_api = MediaWikiApi()
+TOPICS= ["education",
+        "health",
+        "business",
+        "motorsport",
+        "science",
+        "space",
+        "technology",
+        "war"]
+# controllers implementations
 
 db = Database()
 
@@ -83,6 +96,37 @@ def index():
 # @app.get("/user/articles/<int:user_id>")
 # def fetch_users_articles_controller():
 #     return "<p>Return users articles bases on id of fail if invalid user id is provided</p>"
+
+# @app.get('/articles/<email>')
+# def get_articles(email):
+#     # Start the consumer thread for the user
+#     consumer_thread = KafkaConsumerThread(email)
+#     consumer_thread.start()
+
+#     # Wait for the consumer thread to finish
+#     consumer_thread.join()
+
+#     # Return the articles to the user
+#     return consumer_thread.result
+
+# @app.post("/create/user")
+# def create_user_controller():
+#     data = request.get_json()
+#     response = user.create(data)
+
+#     return response, 201
+
+# @app.put("/edit/user/keywords/<string:email>")
+# def add_new_user_controller(email):
+#     data = request.get_json()
+#     response = user.update(email, data)
+#     return response, 201
+
+# @app.delete("/delete/user/<string:email>")
+# def delete_user_controller(email):
+#     count = user.delete(email)
+#     return "Deleted entities: " + str(count)
+
 #
 # @app.post("/create/user")
 # def create_user_controller():
@@ -101,12 +145,67 @@ def index():
 # def delete_user_controller(email):
 #     count = user.delete(email)
 #     return "Deleted entities: " + str(count)
+@app.get('/fetch')
+def fetch_source():
+    domains=[]
+    object=[]
+    for topic in TOPICS:
+        articles = news_api.get_articles(topic)
+        for article in articles:
+            if article['source'] is not '':
+                if article['source'] not in domains:
+                    domains.append(article['source'])
+                # producer.send(topic,article)
+
+    for domain in domains:
+        source_info = media_api.get_source_domain_info(domain)
+        if source_info:
+            # producer.send("sources", value=source_info)
+            object.append(source_info)
+        else:
+            object.append('')
+
+    return jsonify(object)
+
+
+@app.get('/users/<string:email>')
+def get_user_articles(email):
+    # get the user's preferences
+    user = db.users.find_one({'_id': email})
+
+    # create a dictionary to hold the articles grouped by source
+    sources = {}
+
+    # get the articles for each keyword the user is interested in
+    for keyword in user['keywords']:
+
+        # get the articles from the corresponding topic collection
+        articles = list(db.keywords.find(keyword))
+
+        # group the articles by source
+        for article in articles:
+            source = article['source']
+            if source not in sources:
+                sources[source] = []
+            sources[source].append(article)
+
+    # for each source, get its description from the sources collection if available
+    for source, articles in sources.items():
+        description = sources.find_one({'_id': source})
+        if description:
+            sources[source]['description'] = description['description']
+
+    # return the articles grouped by source
+    return jsonify(sources)
 
 if __name__ == "__main__":
     # Creating a new connection with mongo
     app.run(port=8080, host="0.0.0.0")
 
-    # while True:
-    #     for topic in TOPICS:
-    #         producer.publish_articles_on_topic(topic)
-    #     time.sleep(7200)
+    producer_thread = KafkaProducerThread(TOPICS)
+    producer_thread.start()
+    consumer_thread = KafkaConsumerThread(TOPICS)
+    consumer_thread.start()
+    # threading.Thread(target=run_producer).start()
+    # threading.Thread(target=run_consumer).start()
+
