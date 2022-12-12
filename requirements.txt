@@ -5,3 +5,7 @@ kafka-python
 Flask-PyMongo
 requests
 pymediawiki
+pydantic
+jellyfish
+pymediawiki
+beanie
