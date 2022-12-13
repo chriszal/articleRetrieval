@@ -4,11 +4,7 @@ from kafka_bus.kafkaConsumerThread import KafkaConsumerThread
 from assets.database import Database
 from apis.mediawiki import MediaWikiApi
 from apis.newsapi import NewsApi
-import time
-import logging
-# import jellyfish
-import datetime
-from assets.models import Users
+import jellyfish
 
 
 # Name of the application module or package so flask knows where to look for resources
@@ -16,14 +12,8 @@ app = Flask(__name__)
 
 news_api = NewsApi()
 media_api = MediaWikiApi()
-TOPICS= ["education",
-        "health",
-        "business",
-        "motorsport",
-        "science",
-        "space",
-        "technology",
-        "war"]
+
+TOPICS= Database.TOPICS
 # controllers implementations
 
 db = Database()
@@ -31,120 +21,103 @@ db = Database()
 
 @app.route('/')
 def index():
-    user = {
-        "keywords": ["test", "test2"],
-        "email": "test@gmail.com",
-        "created": "test",
-        "city": "Testssssasdbasud"
-    }
-
-    insert_result = db.users.insert_one(user)
-
-    print(insert_result)
+    # user = {
+    #     "keywords": {"test": "test2"},
+    #     "email": "test@gmail.com",
+    #     "created": datetime.datetime.now(),
+    #     "city": "Testssssasdbasud"
+    # }
+    #
+    # insert_result = db.users.insert_one(user)
+    #
+    # print(insert_result)
 
     return jsonify(
         status=True,
         message='Welcome !'
     )
 
+'''
+ USER'S API METHODS
+'''
+@app.post("/user/create")
+def create_user_controller():
+    data = request.get_json()
 
-# @app.get("/keyword/articles/<string:keyword>")
-# def fetch_users_articles_controller(user_keyword):
-#     """
-#     :param keyword:
-#     :return: The articles that corespond to this keyword
-#
-#     :Note: The available keywords the user can enter here are
-#       [
-#         agricuture,
-#         bussines,
-#         elon musk,
-#         motosport,
-#         science,
-#         space,
-#         tech,
-#         war
-#     """
-#     keywords = [
-#         "agricuture",
-#         "bussines",
-#         "elon musk",
-#         "motosport",
-#         "science",
-#         "space",
-#         "technology",
-#         "war"
-#     ]
-#
-#     for keyword in keywords:
-#
-#         #Cosine similarity of the true title and the candidate
-#         if jellyfish.jaro_distance(keyword, user_keyword) >= 0.85:
-#             response = db.find_articles(user_keyword)
-#             return response, 201
-#
-#     return "There are no anvailable records for the given keyword, please use one that is supported and try again", 500
+    response = db.create_user(data)
 
-# @app.get("/source/description/<string:sourcedomainname>")
-# def fetch_users_articles_controller(sourcedomainname):
-#     #TODO- actual api response
-#     #Cosine similarity of the true title and the candidate
-#     response = sourceDomainDesc.fetch_domain_descriptionzç(sourcedomainname)
-#     return response
-#
-#
-# @app.get("/user/articles/<int:user_id>")
-# def fetch_users_articles_controller():
-#     return "<p>Return users articles bases on id of fail if invalid user id is provided</p>"
+    return {
+        "satus": 201,
+        "data": response,
+    }
 
-# @app.get('/articles/<email>')
-# def get_articles(email):
-#     # Start the consumer thread for the user
-#     consumer_thread = KafkaConsumerThread(email)
-#     consumer_thread.start()
+@app.put("/user/edit/keywords")
+def edit_user_keywords_controller():
+    email = request.args.get('email')
+    data = request.get_json()
 
-#     # Wait for the consumer thread to finish
-#     consumer_thread.join()
+    response = db.edit_user_keywords(email, data)
 
-#     # Return the articles to the user
-#     return consumer_thread.result
+    return {
+        "satus": 200,
+        "data": response,
+    }
 
-# @app.post("/create/user")
-# def create_user_controller():
-#     data = request.get_json()
-#     response = user.create(data)
+@app.get('/user/articles')
+def get_articles():
+    email = request.args.get("email")
 
-#     return response, 201
+    response = db.find_articles(email)
 
-# @app.put("/edit/user/keywords/<string:email>")
-# def add_new_user_controller(email):
-#     data = request.get_json()
-#     response = user.update(email, data)
-#     return response, 201
+    # Return the articles to the user
+    return response
 
-# @app.delete("/delete/user/<string:email>")
-# def delete_user_controller(email):
-#     count = user.delete(email)
-#     return "Deleted entities: " + str(count)
+@app.delete("/user/delete")
+def delete_user_controller():
+    email = request.args.get("email")
 
-#
-# @app.post("/create/user")
-# def create_user_controller():
-#     data = request.get_json()
-#     response = user.create(data)
-#
-#     return response, 201
-#
-# @app.put("/edit/user/keywords/<string:email>")
-# def add_new_user_controller(email):
-#     data = request.get_json()
-#     response = user.update(email, data)
-#     return response, 201
-#
-# @app.delete("/delete/user/<string:email>")
-# def delete_user_controller(email):
-#     count = user.delete(email)
-#     return "Deleted entities: " + str(count)
+    response = db.delete_user(email)
+
+    return response
+
+'''
+ Topics Controllers
+'''
+@app.put("/topics/add/article")
+def add_articles_to_topic():
+    topic = request.args.get("topic")
+    data = request.get_json()
+
+    response = db.insert_article(topic, data)
+
+    return response
+
+
+@app.get("/topics/articles/<string:keyword>")
+def fetch_users_articles_controller(user_keyword):
+    """
+    :param keyword:
+    :return: The articles that correspond to the specified topic/keyword
+
+    """
+    for topic in TOPICS:
+        #Cosine similarity of the true title and the candidate
+        if jellyfish.jaro_distance(topic, user_keyword) >= 0.85:
+            response = db.find_articles(user_keyword)
+            return {
+                "satus": 201,
+                "data": response,
+            }
+
+    return "There are no anvailable records for the given keyword, please use one that is supported and try again", 500
+
+
+'''
+ Source Domain Controllers
+'''
+
+
+
 @app.get('/fetch')
 def fetch_source():
     domains=[]
@@ -166,37 +139,6 @@ def fetch_source():
             object.append('')
 
     return jsonify(object)
-
-
-@app.get('/users/<string:email>')
-def get_user_articles(email):
-    # get the user's preferences
-    user = db.users.find_one({'_id': email})
-
-    # create a dictionary to hold the articles grouped by source
-    sources = {}
-
-    # get the articles for each keyword the user is interested in
-    for keyword in user['keywords']:
-
-        # get the articles from the corresponding topic collection
-        articles = list(db.keywords.find(keyword))
-
-        # group the articles by source
-        for article in articles:
-            source = article['source']
-            if source not in sources:
-                sources[source] = []
-            sources[source].append(article)
-
-    # for each source, get its description from the sources collection if available
-    for source, articles in sources.items():
-        description = sources.find_one({'_id': source})
-        if description:
-            sources[source]['description'] = description['description']
-
-    # return the articles grouped by source
-    return jsonify(sources)
 
 if __name__ == "__main__":
     # Creating a new connection with mongo

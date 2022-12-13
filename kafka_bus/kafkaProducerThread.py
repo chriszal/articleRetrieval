@@ -30,11 +30,13 @@ class KafkaProducerThread(Thread):
                     if article['source'] != '':
                         if article['source'] not in domains:
                             domains.append(article['source'])
+                        #sending the articles for each topic to the kafka buss(topic)
                         producer.send(topic,value=article)
             
             for domain in domains:
                 source_info = self.media_api.get_source_domain_info(domain)
                 if source_info:
+                    #Sending the info about the domain to the sources topic8
                     producer.send("sources", value=source_info)
                     
             # Flush the producer to ensure all messages are sent
