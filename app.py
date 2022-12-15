@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from kafka_bus.kafkaProducerThread import KafkaProducerThread
 from kafka_bus.kafkaConsumerThread import KafkaConsumerThread
+from concurrent.futures import ThreadPoolExecutor
 from assets.database import Database
 from apis.mediawiki import MediaWikiApi
 from apis.newsapi import NewsApi
@@ -144,10 +145,7 @@ if __name__ == "__main__":
     # Creating a new connection with mongo
     app.run(port=8080, host="0.0.0.0")
 
-    producer_thread = KafkaProducerThread(TOPICS)
-    producer_thread.start()
-    consumer_thread = KafkaConsumerThread(TOPICS,db=db)
-    consumer_thread.start()
-    # threading.Thread(target=run_producer).start()
-    # threading.Thread(target=run_consumer).start()
+    executor = ThreadPoolExecutor(max_workers=2)
+    executor.submit(KafkaProducerThread, TOPICS)
+    executor.submit(KafkaConsumerThread, TOPICS, db)
 

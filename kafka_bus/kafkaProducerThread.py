@@ -1,49 +1,48 @@
-from kafka import KafkaProducer
-from threading import Thread
-import time
+from threading import Timer
 import json
 from apis.newsapi import NewsApi
 from apis.mediawiki import MediaWikiApi
+from kafka import KafkaProducer
 
 
-class KafkaProducerThread(Thread):
-    def __init__(self,TOPICS):
-        Thread.__init__(self)
-        self.topics = TOPICS
+def call_apis(topics, news_api, media_api):
+    producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
+        max_block_ms=100000,
+        value_serializer=json.dumps)
+
+    domains = []
+
+    for topic in topics:
+        articles = news_api.get_articles(topic)
+        for article in articles:
+            if article['source'] != '':
+                if article['source'] not in domains:
+                    domains.append(article['source'])
+
+                producer.send(topic, value=article)
+
+    for domain in domains:
+        source_info = media_api.get_source_domain_info(domain)
+        if source_info:
+            producer.send("sources", value={"source_name": domain, "source_info": source_info})
+
+    # Flush the producer to ensure all messages are sent
+    producer.flush()
+
+
+class KafkaProducerThread:
+    def __init__(self, topics):
+        self.topics = topics
         self.news_api = NewsApi()
         self.media_api = MediaWikiApi()
 
+    def start(self):
+        # Call the APIs immediately when the thread starts
+        call_apis(self.topics, self.news_api, self.media_api)
 
-    def run(self):
-        # Initialize the Kafka producer
-        producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
-            max_block_ms=100000,
-            value_serializer=lambda x: json.dumps(x).encode('utf-8'))
+        # Use a timer to schedule the next API call
+        timer = Timer(7200, self.start)
+        timer.start()
 
-        # Function to call the News API and publish the retrieved articles to the corresponding Kafka topic
-        def call_apis():
-            # Iterate over the keywords
-            domains=[]
-            for topic in self.topics:
-                articles = self.news_api.get_articles(topic)
-                for article in articles:
-                    if article['source'] != '':
-                        if article['source'] not in domains:
-                            domains.append(article['source'])
-                        #sending the articles for each topic to the kafka buss(topic)
-                        producer.send(topic,value=article)
-            
-            for domain in domains:
-                source_info = self.media_api.get_source_domain_info(domain)
-                if source_info:
-                    #Sending the info about the domain to the sources topic8
-                    producer.send("sources", value={"source_name":domain,"source_info":source_info})
-                    
-            # Flush the producer to ensure all messages are sent
-            producer.flush()
 
-        # Call the News API every 2 hours
-        while True:
-            call_apis()
-            time.sleep(7200)
-            
+
