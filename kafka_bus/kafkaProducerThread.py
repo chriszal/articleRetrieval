@@ -4,9 +4,10 @@ from apis.newsapi import NewsApi
 from apis.mediawiki import MediaWikiApi
 from kafka import KafkaProducer
 import time
+import logging
 
 
-def call_apis(topics, news_api, media_api):
+def call_apis(self,topics, news_api, media_api):
     producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
         max_block_ms=100000,
         value_serializer=lambda x: json.dumps(x).encode('utf-8'))
@@ -19,6 +20,7 @@ def call_apis(topics, news_api, media_api):
             if article['source'] != '':
                 if article['source'] not in domains:
                     domains.append(article['source'])
+                self.log.info(article['source'])
 
                 producer.send(topic, value=article)
                 producer.flush()
@@ -36,10 +38,15 @@ class KafkaProducerThread:
         self.topics = topics
         self.news_api = NewsApi()
         self.media_api = MediaWikiApi()
+        self.log = logging.getLogger("my-logger")
+        self.log.info(("init"))
+
 
     def start(self):
+        self.log.info("starts")
+        time.sleep(15)
         # Call the APIs immediately when the thread starts
-        call_apis(self.topics, self.news_api, self.media_api)
+        call_apis(self,self.topics, self.news_api, self.media_api)
 
         # Use a timer to schedule the next API call
         timer = Timer(7200, self.start)

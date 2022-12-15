@@ -7,6 +7,7 @@ from apis.mediawiki import MediaWikiApi
 from apis.newsapi import NewsApi
 import time
 # import jellyfish
+import logging
 
 
 # Name of the application module or package so flask knows where to look for resources
@@ -145,11 +146,12 @@ def fetch_source():
 if __name__ == "__main__":
     # Creating a new connection with mongo
     app.run(port=8080, host="0.0.0.0")
-    time.sleep(50)
+    
+    
     executor = ThreadPoolExecutor(max_workers=2)
     producerThread = KafkaProducerThread(TOPICS)
+    
+    executor.submit(producerThread.start())
     consumerThread = KafkaConsumerThread(TOPICS, db)
-
-    executor.submit(producerThread.start)
-    executor.submit(consumerThread.start)
+    executor.submit(consumerThread.start())
 
