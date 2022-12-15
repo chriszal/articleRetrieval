@@ -283,6 +283,28 @@ class Database(object):
             "description": "Something whent wrong while trying to update the topic's article list"
         }
 
+    def insert_source_info(self, source_name, source_info):
+        try:
+            if not self.sourceDomainName.find_one({"source":source_name}):
+                self.sourceDomainName.insert_one({"source":source_name,"description":source_info})
+                return {
+                "status": 200,
+                "data": "The source was added!!!!!!"
+                }
+            else:
+                return {
+                "status": 500,
+                "data": "The source is already inserted"
+            }
+            
+        except Exception as e:
+            logging.exception(e)
+        return {
+            "status": 500,
+            "description": "Something whent wrong while trying to update the topic's article list"
+        }
+
+
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):

@@ -37,7 +37,7 @@ class KafkaProducerThread(Thread):
                 source_info = self.media_api.get_source_domain_info(domain)
                 if source_info:
                     #Sending the info about the domain to the sources topic8
-                    producer.send("sources", value=source_info)
+                    producer.send("sources", value={"source_name":domain,"source_info":source_info})
                     
             # Flush the producer to ensure all messages are sent
             producer.flush()
