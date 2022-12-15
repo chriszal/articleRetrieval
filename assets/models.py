@@ -32,7 +32,7 @@ class Keywords(Document):
     science: List[object]
     tech: List[object]
     war: List[object]
-    motosport: List[object]
+    motorsport: List[object]
 
 class ArticleSDDescription(Document):
     source: Dict[str, str] = None

@@ -5,7 +5,8 @@ from concurrent.futures import ThreadPoolExecutor
 from assets.database import Database
 from apis.mediawiki import MediaWikiApi
 from apis.newsapi import NewsApi
-import jellyfish
+import time
+# import jellyfish
 
 
 # Name of the application module or package so flask knows where to look for resources
@@ -94,23 +95,23 @@ def add_articles_to_topic():
     return response
 
 
-@app.get("/topics/articles/<string:keyword>")
-def fetch_users_articles_controller(user_keyword):
-    """
-    :param keyword:
-    :return: The articles that correspond to the specified topic/keyword
+# @app.get("/topics/articles/<string:keyword>")
+# def fetch_users_articles_controller(user_keyword):
+#     """
+#     :param keyword:
+#     :return: The articles that correspond to the specified topic/keyword
 
-    """
-    for topic in TOPICS:
-        #Cosine similarity of the true title and the candidate
-        if jellyfish.jaro_distance(topic, user_keyword) >= 0.85:
-            response = db.find_articles(user_keyword)
-            return {
-                "satus": 201,
-                "data": response,
-            }
+#     """
+#     for topic in TOPICS:
+#         #Cosine similarity of the true title and the candidate
+#         if jellyfish.jaro_distance(topic, user_keyword) >= 0.85:
+#             response = db.find_articles(user_keyword)
+#             return {
+#                 "satus": 201,
+#                 "data": response,
+#             }
 
-    return "There are no anvailable records for the given keyword, please use one that is supported and try again", 500
+#     return "There are no anvailable records for the given keyword, please use one that is supported and try again", 500
 
 
 '''
@@ -144,8 +145,11 @@ def fetch_source():
 if __name__ == "__main__":
     # Creating a new connection with mongo
     app.run(port=8080, host="0.0.0.0")
-
+    time.sleep(50)
     executor = ThreadPoolExecutor(max_workers=2)
-    executor.submit(KafkaProducerThread, TOPICS)
-    executor.submit(KafkaConsumerThread, TOPICS, db)
+    producerThread = KafkaProducerThread(TOPICS)
+    consumerThread = KafkaConsumerThread(TOPICS, db)
+
+    executor.submit(producerThread.start)
+    executor.submit(consumerThread.start)
 

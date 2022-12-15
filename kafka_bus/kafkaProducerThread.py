@@ -3,12 +3,13 @@ import json
 from apis.newsapi import NewsApi
 from apis.mediawiki import MediaWikiApi
 from kafka import KafkaProducer
+import time
 
 
 def call_apis(topics, news_api, media_api):
     producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
         max_block_ms=100000,
-        value_serializer=json.dumps)
+        value_serializer=lambda x: json.dumps(x).encode('utf-8'))
 
     domains = []
 
@@ -20,15 +21,15 @@ def call_apis(topics, news_api, media_api):
                     domains.append(article['source'])
 
                 producer.send(topic, value=article)
-
+                producer.flush()
     for domain in domains:
         source_info = media_api.get_source_domain_info(domain)
         if source_info:
+            
             producer.send("sources", value={"source_name": domain, "source_info": source_info})
 
-    # Flush the producer to ensure all messages are sent
-    producer.flush()
-
+            # Flush the producer to ensure all messages are sent
+            producer.flush()
 
 class KafkaProducerThread:
     def __init__(self, topics):

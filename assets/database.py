@@ -122,7 +122,7 @@ class Database(object):
                                                     validator={"$jsonSchema": article_schema})
             self.business = self.db.create_collection("business", check_exists=True,
                                                       validator={"$jsonSchema": article_schema})
-            self.motosport = self.db.create_collection("motosport", check_exists=True,
+            self.motosport = self.db.create_collection("motorsport", check_exists=True,
                                                        validator={"$jsonSchema": article_schema})
             self.science = self.db.create_collection("science", check_exists=True,
                                                      validator={"$jsonSchema": article_schema})
@@ -138,7 +138,7 @@ class Database(object):
             self.education = self.db["education"]
             self.health = self.db["health"]
             self.business = self.db["business"]
-            self.motosport = self.db["motosport"]
+            self.motosport = self.db["motorsport"]
             self.science = self.db["science"]
             self.space = self.db["space"]
             self.technology = self.db["technology"]
