@@ -13,8 +13,8 @@ class KafkaConsumerThread:
     def start(self):
          # Wait for a few seconds before starting the Kafka consumer
         self.log.info("Start Consumer Thread")
-        time.sleep(20)
-        consumer = KafkaConsumer(bootstrap_servers=['localhost:9092'],
+        
+        consumer = KafkaConsumer(bootstrap_servers=['kafka:29092'],
                                  auto_offset_reset='latest',
                                  enable_auto_commit=True,
                                  value_deserializer=lambda x: json.loads(x.decode('utf-8')))
@@ -23,7 +23,7 @@ class KafkaConsumerThread:
             self.log.info(message)
             self.db.insert_article(message.topic, [message.value])
 
-        source_consumer = KafkaConsumer('sources', bootstrap_servers=['localhost:9092'], auto_offset_reset='latest',enable_auto_commit=True,
+        source_consumer = KafkaConsumer('sources', bootstrap_servers=['kafka:29092'], auto_offset_reset='latest',enable_auto_commit=True,
                                         value_deserializer=lambda x: json.loads(x.decode('utf-8')))
 
         for message in source_consumer:

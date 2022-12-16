@@ -8,7 +8,7 @@ import logging
 
 
 def call_apis(self,topics, news_api, media_api):
-    producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
+    producer = KafkaProducer(bootstrap_servers=['kafka:29092'],
         max_block_ms=100000,
         value_serializer=lambda x: json.dumps(x).encode('utf-8'))
 
@@ -44,7 +44,6 @@ class KafkaProducerThread:
 
     def start(self):
         self.log.info("starts")
-        time.sleep(15)
         # Call the APIs immediately when the thread starts
         call_apis(self,self.topics, self.news_api, self.media_api)
 
