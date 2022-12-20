@@ -76,11 +76,11 @@ def call_apis(topics, news_api, media_api):
                 producer.send(topic, value=article)
                 #Flush the producer to ensure the message is sent
                 producer.flush()
-    for domain in domains:
-        source_info = media_api.get_source_domain_info(domain)
-        if source_info:
-            producer.send("sources", value={"source_name": domain, "source_info": source_info})
-            producer.flush()
+    # for domain in domains:
+    #     source_info = media_api.get_source_domain_info(domain)
+    #     if source_info:
+    #         producer.send("sources", value={"source_name": domain, "source_info": source_info})
+    #         producer.flush()
 
     # Flush the producer to ensure all messages are sent
     
@@ -98,7 +98,7 @@ class KafkaProducerThread:
         call_apis(self.topics, self.news_api, self.media_api)
 
         # Use a timer to schedule the next API call
-        timer = Timer(7200, self.start)
+        timer = Timer(100, self.start)
         timer.start()
         
 

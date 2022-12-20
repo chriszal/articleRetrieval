@@ -8,6 +8,7 @@ from apis.newsapi import NewsApi
 import time
 # import jellyfish
 import logging
+import threading
 
 
 # Name of the application module or package so flask knows where to look for resources
@@ -128,7 +129,7 @@ def fetch_source():
     for topic in TOPICS:
         articles = news_api.get_articles(topic)
         for article in articles:
-            if article['source'] is not '':
+            if article['source'] != '':
                 if article['source'] not in domains:
                     domains.append(article['source'])
                 # producer.send(topic,article)
@@ -141,17 +142,18 @@ def fetch_source():
         else:
             object.append('')
 
-    return jsonify(object)
+    return jsonify(domains)
 
 if __name__ == "__main__":
     # Creating a new connection with mongo
-    app.run(port=8080, host="0.0.0.0")
+    # threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0",debug=True,use_reloader=False)).start()    
     
-    
-    executor = ThreadPoolExecutor(max_workers=2)
+    executor = ThreadPoolExecutor(max_workers=3)
     producerThread = KafkaProducerThread(TOPICS)
-    
-    executor.submit(producerThread.start())
+    flaskThread = threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0",debug=True,use_reloader=False))
+    executor.submit(flaskThread.start())
+    time.sleep(15)
+    executor.submit(producerThread.start)
     consumerThread = KafkaConsumerThread(TOPICS, db)
-    executor.submit(consumerThread.start())
+    executor.submit(consumerThread.start)
 

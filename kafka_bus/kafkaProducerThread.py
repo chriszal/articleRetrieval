@@ -20,7 +20,6 @@ def call_apis(self,topics, news_api, media_api):
             if article['source'] != '':
                 if article['source'] not in domains:
                     domains.append(article['source'])
-                self.log.info(article['source'])
 
                 producer.send(topic, value=article)
                 producer.flush()
@@ -38,12 +37,10 @@ class KafkaProducerThread:
         self.topics = topics
         self.news_api = NewsApi()
         self.media_api = MediaWikiApi()
-        self.log = logging.getLogger("my-logger")
-        self.log.info(("init"))
 
 
     def start(self):
-        self.log.info("starts")
+        # time.sleep(10)
         # Call the APIs immediately when the thread starts
         call_apis(self,self.topics, self.news_api, self.media_api)
 

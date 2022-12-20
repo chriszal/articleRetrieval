@@ -337,11 +337,14 @@ class KafkaConsumerThread:
                                  auto_offset_reset='earliest',
                                  enable_auto_commit=True,
                                  value_deserializer=lambda x: json.loads(x.decode('utf-8')))
-        consumer.subscribe(self.topics)
+        consumer.subscribe(self.topics+["sources"])
         
         for message in consumer:
             print(message.topic)
-            self.db.insert_article(message.topic, [message.value])
+            if message.topic=="sources":
+                self.db.insert_source_info(message.value["source_name"], message.value["source_info"])
+            else:
+                self.db.insert_article(message.topic, [message.value])
 
         # source_consumer = KafkaConsumer('sources', bootstrap_servers=['localhost:9092'], auto_offset_reset='earliest',
         #                                 value_deserializer=lambda x: json.loads(x.decode('utf-8')))
