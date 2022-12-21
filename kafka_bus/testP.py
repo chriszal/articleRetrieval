@@ -10,6 +10,7 @@ import json
 # from apis.mediawiki import MediaWikiApi
 from mediawiki import MediaWiki, DisambiguationError, PageError
 
+
 # Init
 class MediaWikiApi():
     def __init__(self):
@@ -18,12 +19,17 @@ class MediaWikiApi():
     def get_source_domain_info(self, source_name):
         # Search for articles with the source domain name
         try:
-            articles = self.mediawiki.page(source_name)
+            articles = self.mediawiki.page(source_name+" News")
         except DisambiguationError as e:
             # Handle the case where multiple pages are found
-            return e.options
+            # return e.options
+            # print(f"An error occurred: {e}")
+            return self.mediawiki.page(e.options[0]).summary
         except PageError as e:
-            return e.message
+            # return e.message
+            print(f"An error occurred: {e}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
         else:
             # Return the first article's description
             return articles.summary
@@ -76,11 +82,11 @@ def call_apis(topics, news_api, media_api):
                 producer.send(topic, value=article)
                 #Flush the producer to ensure the message is sent
                 producer.flush()
-    # for domain in domains:
-    #     source_info = media_api.get_source_domain_info(domain)
-    #     if source_info:
-    #         producer.send("sources", value={"source_name": domain, "source_info": source_info})
-    #         producer.flush()
+    for domain in domains:
+        source_info = media_api.get_source_domain_info(domain)
+        if source_info:
+            producer.send("sources", value={"source_name": domain, "source_info": source_info})
+            producer.flush()
 
     # Flush the producer to ensure all messages are sent
     

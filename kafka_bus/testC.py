@@ -342,6 +342,7 @@ class KafkaConsumerThread:
         for message in consumer:
             print(message.topic)
             if message.topic=="sources":
+                print(message.value["source_info"])
                 self.db.insert_source_info(message.value["source_name"], message.value["source_info"])
             else:
                 self.db.insert_article(message.topic, [message.value])
