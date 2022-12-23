@@ -233,18 +233,19 @@ class Database(object):
             user_topics = user['keywords']
             for topic in user_topics:
 
-                cursor_article = self.db[f"{topic}"].find()
-
+                cursor_article = self.db[f"{topic}"].find().limit(10)
+                articles[topic] = [] 
                 sources = []
                 for article in cursor_article:
 
                     art_cont = article["article"]
                     src = article["source"]
-
-                    articles[topic] = {
+                    
+                    articles[topic].append({
                         "article": art_cont,
                         "source": src
-                    }
+                    })
+                    
 
                     if src not in sources:
                         sources.append(src)
