@@ -1,12 +1,10 @@
-```
-virtualenv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+### Clone and initialize backend project
 
-TODO - WRITE REAL DOCS
+```bash
+git clone https://github.com/chriszal/articleRetrieval
+cd articleRetrieval
 ```
-
-Start the application
+### Start the application
 --
 while you are in the docker folder type
 
@@ -15,3 +13,6 @@ while you are in the docker folder type
    
 2. To stop and clean-up
    - docker compose -p  <project name> down 
+
+### Endpoints
+
