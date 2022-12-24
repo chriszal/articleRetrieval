@@ -1,34 +1,46 @@
-from kafka import KafkaConsumer
-from threading import Thread
 import json
-from assets.database import Database
+from kafka.errors import NoBrokersAvailable
+from kafka import KafkaConsumer
+import logging
+import time
 
-class KafkaConsumerThread(Thread):
-    def __init__(self,TOPICS):
-        Thread.__init__(self)
-        self.topics = TOPICS
-        self.db = Database()
 
-    def run(self):
-        print("Start Consumer Thread")
-        consumer = KafkaConsumer(bootstrap_servers=['localhost:9092'],
-                auto_offset_reset='earliest',
-                enable_auto_commit=True,value_deserializer=lambda x: json.loads(x.decode('utf-8')))
-        for topic in self.topics:
+class ConnectionException(Exception):
+    pass
 
-            consumer.subscribe(topic)
 
-            # Iterate over the messages in the topic
-            for message in consumer:
-                print(message)
-               # Save articles in corresponding MongoDB collection
-                self.db.keywords.insert_one(message.value)
+class KafkaConsumerThread:
+    def __init__(self, topics, db):
+        self.topics = topics
+        self.db = db
+        # self.logger = logging.getLogger()
+        # self.logger.debug("Initializing the consumer")
 
-        # Initialize the Kafka consumer for the sources topic
-        source_consumer = KafkaConsumer('sources', bootstrap_servers=['localhost:9092'], auto_offset_reset='earliest',value_deserializer=lambda x: json.loads(x.decode('utf-8')))
-
-        for message in source_consumer:
-            print(message)
-            # Save source domain name information in "sources" collection
-            self.db.ArticlesSDDescription.insert_one(message.value)
+    def start(self):
+         # Wait for a few seconds before starting the Kafka consumer
+        # time.sleep(15)
+        # self.logger.debug("Getting the kafka consumer")
+        try:
+            consumer = KafkaConsumer(bootstrap_servers=['kafka:29092'],
+                            auto_offset_reset='earliest',
+                            enable_auto_commit=True,
+                            value_deserializer=lambda x: json.loads(x.decode('utf-8')))
+        except NoBrokersAvailable as err:
+            # self.logger.error("Unable to find a broker: {0}".format(err))
+            time.sleep(1)
+        consumer.subscribe(self.topics+["sources"])
+        
+        # try:
+        # if consumer:
+        for message in consumer:
+            if message.topic=="sources":
+                self.db.insert_source_info(message.value["source_name"], message.value["source_info"])
+            else:
+                self.db.insert_article(message.topic, [message.value])
+            # raise ConnectionException
+        # except AttributeError as ae:
+        #     self.logger.error("Unable to retrieve the message.  "
+        #                       "There is no consumer to read from.")
+        #     self.logger.error(str(ae))
+        #     raise ConnectionException
 

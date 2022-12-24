@@ -7,3 +7,6 @@ requests
 pymediawiki
 pydantic
 jellyfish
+pymediawiki
+# wikipedia-api
+beanie
