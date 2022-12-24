@@ -1,4 +1,4 @@
-### Clone and initialize backend project
+### Clone project
 
 ```bash
 git clone https://github.com/chriszal/articleRetrieval
@@ -15,4 +15,15 @@ while you are in the docker folder type
    - docker compose -p  <project name> down 
 
 ### Endpoints
-
+```bash
+   /user/create --data '{"email":"example@gmail.com","city":"example","keywords":["war","health"]}'
+```
+```bash
+   /user/edit/keywords
+```
+```bash
+   /user/articles
+```
+```bash
+   /user/delete
+```
