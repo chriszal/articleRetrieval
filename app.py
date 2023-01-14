@@ -21,7 +21,6 @@ TOPICS = Database.TOPICS
 
 db = Database()
 
-
 @app.route('/')
 def index():
     # user = {
@@ -40,11 +39,9 @@ def index():
         message='Welcome !'
     )
 
-
 '''
  USER'S API METHODS
 '''
-
 
 @app.post("/user/create")
 def create_user_controller():
@@ -56,7 +53,6 @@ def create_user_controller():
         "satus": 201,
         "data": response,
     }
-
 
 @app.put("/user/edit/keywords")
 def edit_user_keywords_controller():
@@ -70,7 +66,6 @@ def edit_user_keywords_controller():
         "data": response,
     }
 
-
 @app.get('/user/articles')
 def get_articles():
     email = request.args.get("email")
@@ -80,7 +75,6 @@ def get_articles():
     # Return the articles to the user
     return response
 
-
 @app.delete("/user/delete")
 def delete_user_controller():
     email = request.args.get("email")
@@ -89,11 +83,9 @@ def delete_user_controller():
 
     return response
 
-
 '''
  Topics Controllers
 '''
-
 
 @app.put("/topics/add/article")
 def add_articles_to_topic():
@@ -103,18 +95,6 @@ def add_articles_to_topic():
     response = db.insert_article(topic, data)
 
     return response
-
-
-@app.get('/user/recommend')
-def fetch_recommendation():
-    email = request.args.get("email")
-    article_id = request.args.get("id")
-
-    return jsonify(
-        status=True,
-        message='Test recommendations'
-    )
-
 
 # @app.get("/topics/articles/<string:keyword>")
 # def fetch_users_articles_controller(user_keyword):
@@ -134,11 +114,9 @@ def fetch_recommendation():
 
 #     return "There are no anvailable records for the given keyword, please use one that is supported and try again", 500
 
-
 '''
  Source Domain Controllers
 '''
-
 
 @app.get('/fetch')
 def fetch_source():
@@ -161,6 +139,21 @@ def fetch_source():
             object.append('')
 
     return jsonify(domains)
+
+'''
+ Article prediction endpoints
+'''
+
+@app.get('/user/articles/recommend')
+def fetch_recommendation():
+    email = request.args.get("email")
+    article_id = request.args.get("id")
+
+    return jsonify(
+        status=True,
+        message='Test recommendations'
+    )
+
 
 
 if __name__ == "__main__":
