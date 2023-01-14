@@ -65,11 +65,7 @@ class Database(object):
                     "description": "The article's author"
                 },
                 "timestamp": {
-<<<<<<< HEAD
-                    "bsonType": "int",
-=======
                     "bsonType": "long",
->>>>>>> ff50b909de522702d299cb6a174fd762b654c6e6
                     "description": "The publish date of the article"
                 },
 
