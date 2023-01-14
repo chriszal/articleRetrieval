@@ -13,19 +13,9 @@ class NewsApi():
         
             for article in response_dict['articles']:
                 source = article['source']['name']
-                articles.append({'source':source,'article':article['content']})
-        
+                articles.append({'source':source,'article':article['content'],'author':article['author'],'timestamp':article['publishedAt']})        
             if not articles:
-                articles = [{'source': '', 'article': ''}]
+                articles = [{'source': '','article':'','author':'','timestamp':''}]
             return articles
         else:
-            return [{'source': '', 'article': ''}]
-        
-    #     articles =[]
-    # for keyword in keywords:
-    #     articles.append(news.get_articles(keyword))
-    #     # sources.get_source_domain_info(articles['source'])
-    # # s = wiki.get_source_domain_info(articles['source'])
-
-    # # if articles:
-    # return articles ,201
+            return [{'source': '', 'article':'','author':'','timestamp':''}]

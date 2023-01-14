@@ -59,7 +59,16 @@ class Database(object):
                 "source": {
                     "bsonType": "string",
                     "description": "The article's source fro where this text is coming from"
-                }
+                },
+                "author": {
+                    "bsonType": "string",
+                    "description": "The article's author"
+                },
+                "timestamp": {
+                    "bsonType": "date",
+                    "description": "The publish date of the article"
+                },
+
             }
         }
         try:
