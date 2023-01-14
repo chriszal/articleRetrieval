@@ -39,8 +39,8 @@ services:
 
   flask_api:
     build:
-      context: .. #Very important it refers where the root will be for the build.
-      dockerfile: docker/dockerfiles/Dockerfile
+      context: . #Very important it refers where the root will be for the build.
+      dockerfile: Dockerfile
     links:
         - kafka
     environment:

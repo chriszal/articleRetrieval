@@ -5,11 +5,12 @@ from typing import (
 from datetime import datetime
 from beanie import Document
 
+
 class Users(Document):
     Keywords = []
     email = ''
     created = ''
-    city=''
+    city = ''
 
     def __int__(self, keywords, email, created, city):
         self.Keywords = keywords
@@ -23,8 +24,9 @@ class Users(Document):
             data.pop("_id")
         return data
 
+
 class Keywords(Document):
-    #TODO- later define the structre of this "object" in reality its an article
+    # TODO- later define the structre of this "object" in reality its an article
     agriculture: List[object]
     business: List[object]
     elon: List[object]
@@ -34,7 +36,7 @@ class Keywords(Document):
     war: List[object]
     motorsport: List[object]
 
+
 class ArticleSDDescription(Document):
     source: Dict[str, str] = None
     description: str = None
-

@@ -2,21 +2,21 @@ from threading import Timer
 import json
 from apis.newsapi import NewsApi
 from apis.mediawiki import MediaWikiApi
-from kafka import KafkaProducer 
+from kafka import KafkaProducer
 from kafka.errors import NoBrokersAvailable
 import time
 import logging
 
 
-def call_apis(self,topics, news_api, media_api):
+def call_apis(self, topics, news_api, media_api):
     try:
         producer = KafkaProducer(bootstrap_servers=['kafka:29092'],
-                max_block_ms=100000,
-                value_serializer=lambda x: json.dumps(x).encode('utf-8'))
+                                 max_block_ms=100000,
+                                 value_serializer=lambda x: json.dumps(x).encode('utf-8'))
     except NoBrokersAvailable as err:
         self.logger.error("Unable to find a broker: {0}".format(err))
         time.sleep(1)
-    
+
     domains = []
     try:
         if producer:
@@ -32,13 +32,13 @@ def call_apis(self,topics, news_api, media_api):
             for domain in domains:
                 source_info = media_api.get_source_domain_info(domain)
                 if source_info:
-                    
                     producer.send("sources", value={"source_name": domain, "source_info": source_info})
 
                     # Flush the producer to ensure all messages are sent
                     producer.flush()
     except AttributeError:
         self.logger.error("Unable to send message. The producer does not exist.")
+
 
 class KafkaProducerThread:
     def __init__(self, topics):
@@ -49,15 +49,11 @@ class KafkaProducerThread:
         logger.setLevel(logging.DEBUG)
         self.logger = logger
 
-
     def start(self):
         # time.sleep(10)
         # Call the APIs immediately when the thread starts
-        call_apis(self,self.topics, self.news_api, self.media_api)
+        call_apis(self, self.topics, self.news_api, self.media_api)
 
         # Use a timer to schedule the next API call
         timer = Timer(7200, self.start)
         timer.start()
-
-
-
