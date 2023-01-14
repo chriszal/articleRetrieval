@@ -138,11 +138,8 @@ def fetch_recommendation():
 '''
  Source Domain Controllers
 '''
-<<<<<<< HEAD
-=======
 
 
->>>>>>> 8d0f3b3008d37be434863b96cc6029bb6611b068
 @app.get('/fetch')
 def fetch_source():
     domains = []
