@@ -247,14 +247,12 @@ class Database(object):
                 sources = []
                 for article in cursor_article:
 
-                    art_id = article["_id"]
                     art_cont = article["article"]
                     src = article["source"]
                     art_author = article["author"]
                     art_timestamp= article["timestamp"]
 
                     articles[topic].append({
-                        "id": art_id,
                         "article": art_cont,
                         "source": src,
                         "author":art_author,
