@@ -1,5 +1,6 @@
 from mediawiki import MediaWiki, DisambiguationError, PageError
 
+
 # Init
 class MediaWikiApi():
     def __init__(self):
@@ -8,7 +9,7 @@ class MediaWikiApi():
     def get_source_domain_info(self, source_name):
         # Search for articles with the source domain name
         try:
-            articles = self.mediawiki.page(source_name+" News")
+            articles = self.mediawiki.page(source_name + " News")
         except DisambiguationError as e:
             # Handle the case where multiple pages are found
             # return e.options
