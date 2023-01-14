@@ -249,10 +249,14 @@ class Database(object):
 
                     art_cont = article["article"]
                     src = article["source"]
+                    art_author = article["author"]
+                    art_timestamp= article["publishedAt"]
                     
                     articles[topic].append({
                         "article": art_cont,
-                        "source": src
+                        "source": src,
+                        "author":art_author,
+                        "timestamp":art_timestamp
                     })
                     
 
