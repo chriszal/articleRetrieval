@@ -65,7 +65,7 @@ class Database(object):
                     "description": "The article's author"
                 },
                 "timestamp": {
-                    "bsonType": "date",
+                    "bsonType": "int",
                     "description": "The publish date of the article"
                 },
 
@@ -247,12 +247,14 @@ class Database(object):
                 sources = []
                 for article in cursor_article:
 
+                    art_id = article["_id"]
                     art_cont = article["article"]
                     src = article["source"]
                     art_author = article["author"]
-                    art_timestamp= article["publishedAt"]
+                    art_timestamp= article["timestamp"]
 
                     articles[topic].append({
+                        "id": art_id,
                         "article": art_cont,
                         "source": src,
                         "author":art_author,

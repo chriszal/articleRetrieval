@@ -17,9 +17,12 @@ class NewsApi():
 
             for article in response_dict['articles']:
                 source = article['source']['name']
+                author = article['author']
+                if author==None:
+                    author = ""
                 date_object = datetime.strptime(article['publishedAt'], '%Y-%m-%dT%H:%M:%SZ')
                 unix_timestamp = int(time.mktime(date_object.timetuple()))
-                articles.append({'source': source, 'article': article['content'], 'author': article['author'],
+                articles.append({'source': source, 'article': article['content'], 'author': author,
                                  'timestamp': unix_timestamp})
             if not articles:
                 articles = [{'source': '', 'article': '', 'author': '', 'timestamp': ''}]
