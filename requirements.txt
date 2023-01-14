@@ -10,3 +10,4 @@ jellyfish
 pymediawiki
 # wikipedia-api
 beanie
+networkx
