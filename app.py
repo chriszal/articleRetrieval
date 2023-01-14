@@ -97,6 +97,17 @@ def add_articles_to_topic():
     return response
 
 
+@app.get('/user/recommend')
+def fetch_recommendation():
+    email = request.args.get("email")
+    article_id = request.args.get("id")
+
+    return jsonify(
+        status=True,
+        message='Test recommendations'
+    )
+
+
 # @app.get("/topics/articles/<string:keyword>")
 # def fetch_users_articles_controller(user_keyword):
 #     """
@@ -119,9 +130,6 @@ def add_articles_to_topic():
 '''
  Source Domain Controllers
 '''
-
-
-
 @app.get('/fetch')
 def fetch_source():
     domains=[]
