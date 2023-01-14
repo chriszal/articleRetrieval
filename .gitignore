@@ -1,4 +1,4 @@
 #test
-.venv
-.idea
+!.venv
+!.idea/*
 .DS_Store
