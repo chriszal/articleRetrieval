@@ -11,8 +11,8 @@ from pymongo.errors import CollectionInvalid
 import logging
 from bson.json_util import dumps
 
-class Database(object):
 
+class Database(object):
     TOPICS = ["education",
               "health",
               "business",
@@ -290,25 +290,24 @@ class Database(object):
 
     def insert_source_info(self, source_name, source_info):
         try:
-            if not self.sourceDomainName.find_one({"source":source_name}):
-                self.sourceDomainName.insert_one({"source":source_name,"description":source_info})
+            if not self.sourceDomainName.find_one({"source": source_name}):
+                self.sourceDomainName.insert_one({"source": source_name, "description": source_info})
                 return {
-                "status": 200,
-                "data": "The source was added!!!!!!"
+                    "status": 200,
+                    "data": "The source was added!!!!!!"
                 }
             else:
                 return {
-                "status": 500,
-                "data": "The source is already inserted"
-            }
-            
+                    "status": 500,
+                    "data": "The source is already inserted"
+                }
+
         except Exception as e:
             logging.exception(e)
         return {
             "status": 500,
             "description": "Something whent wrong while trying to update the topic's article list"
         }
-
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -321,15 +320,16 @@ class JSONEncoder(json.JSONEncoder):
 
         return json.JSONEncoder.default(self, o)
 
+
 class KafkaConsumerThread:
-    def __init__(self, topics,db):
+    def __init__(self, topics, db):
         self.topics = topics
         self.db = db
         self.log = logging.getLogger("my-logger")
 
     def start(self):
         print("test")
-         # Wait for a few seconds before starting the Kafka consumer
+        # Wait for a few seconds before starting the Kafka consumer
         # time.sleep(20)
         # self.log.info("Start Consumer Thread")
 
@@ -337,11 +337,11 @@ class KafkaConsumerThread:
                                  auto_offset_reset='earliest',
                                  enable_auto_commit=True,
                                  value_deserializer=lambda x: json.loads(x.decode('utf-8')))
-        consumer.subscribe(self.topics+["sources"])
-        
+        consumer.subscribe(self.topics + ["sources"])
+
         for message in consumer:
             print(message.topic)
-            if message.topic=="sources":
+            if message.topic == "sources":
                 print(message.value["source_info"])
                 self.db.insert_source_info(message.value["source_name"], message.value["source_info"])
             else:
@@ -352,21 +352,22 @@ class KafkaConsumerThread:
 
         # for message in source_consumer:
         #     print(message.message)
-            # self.db.insert_source_info(message.value["source_name"], message.value["source_info"])
+        # self.db.insert_source_info(message.value["source_name"], message.value["source_info"])
+
 
 if __name__ == "__main__":
-    TOPICS= ["education",
-            "health",
-            "business",
-            "motorsport",
-            "science",
-            "space",
-            "technology",
-            "war"]
+    TOPICS = ["education",
+              "health",
+              "business",
+              "motorsport",
+              "science",
+              "space",
+              "technology",
+              "war"]
     executor = ThreadPoolExecutor(max_workers=1)
 
     # Create the Kafka producer thread
-    thread = KafkaConsumerThread(TOPICS,Database())
+    thread = KafkaConsumerThread(TOPICS, Database())
 
     # Start the Kafka producer thread
     future = executor.submit(thread.start)
