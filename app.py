@@ -10,14 +10,13 @@ import time
 import logging
 import threading
 
-
 # Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
 
 news_api = NewsApi()
 media_api = MediaWikiApi()
 
-TOPICS= Database.TOPICS
+TOPICS = Database.TOPICS
 # controllers implementations
 
 db = Database()
@@ -41,9 +40,12 @@ def index():
         message='Welcome !'
     )
 
+
 '''
  USER'S API METHODS
 '''
+
+
 @app.post("/user/create")
 def create_user_controller():
     data = request.get_json()
@@ -54,6 +56,7 @@ def create_user_controller():
         "satus": 201,
         "data": response,
     }
+
 
 @app.put("/user/edit/keywords")
 def edit_user_keywords_controller():
@@ -67,6 +70,7 @@ def edit_user_keywords_controller():
         "data": response,
     }
 
+
 @app.get('/user/articles')
 def get_articles():
     email = request.args.get("email")
@@ -76,6 +80,7 @@ def get_articles():
     # Return the articles to the user
     return response
 
+
 @app.delete("/user/delete")
 def delete_user_controller():
     email = request.args.get("email")
@@ -84,9 +89,12 @@ def delete_user_controller():
 
     return response
 
+
 '''
  Topics Controllers
 '''
+
+
 @app.put("/topics/add/article")
 def add_articles_to_topic():
     topic = request.args.get("topic")
@@ -130,10 +138,15 @@ def fetch_recommendation():
 '''
  Source Domain Controllers
 '''
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 8d0f3b3008d37be434863b96cc6029bb6611b068
 @app.get('/fetch')
 def fetch_source():
-    domains=[]
-    object=[]
+    domains = []
+    object = []
     for topic in TOPICS:
         articles = news_api.get_articles(topic)
         for article in articles:
@@ -152,16 +165,16 @@ def fetch_source():
 
     return jsonify(domains)
 
+
 if __name__ == "__main__":
     # Creating a new connection with mongo
     # threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0",debug=True,use_reloader=False)).start()    
-    
+
     executor = ThreadPoolExecutor(max_workers=3)
     producerThread = KafkaProducerThread(TOPICS)
-    flaskThread = threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0",debug=True,use_reloader=False))
+    flaskThread = threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0", debug=True, use_reloader=False))
     executor.submit(flaskThread.start())
     time.sleep(15)
     executor.submit(producerThread.start)
     consumerThread = KafkaConsumerThread(TOPICS, db)
     executor.submit(consumerThread.start)
-

@@ -6,8 +6,8 @@ from pymongo.errors import CollectionInvalid
 import logging
 from bson.json_util import dumps
 
-class Database(object):
 
+class Database(object):
     TOPICS = ["education",
               "health",
               "business",
@@ -243,7 +243,7 @@ class Database(object):
             for topic in user_topics:
 
                 cursor_article = self.db[f"{topic}"].find().limit(10)
-                articles[topic] = [] 
+                articles[topic] = []
                 sources = []
                 for article in cursor_article:
 
@@ -251,14 +251,13 @@ class Database(object):
                     src = article["source"]
                     art_author = article["author"]
                     art_timestamp= article["publishedAt"]
-                    
+
                     articles[topic].append({
                         "article": art_cont,
                         "source": src,
                         "author":art_author,
                         "timestamp":art_timestamp
                     })
-                    
 
                     if src not in sources:
                         sources.append(src)
@@ -299,25 +298,24 @@ class Database(object):
 
     def insert_source_info(self, source_name, source_info):
         try:
-            if not self.sourceDomainName.find_one({"source":source_name}):
-                self.sourceDomainName.insert_one({"source":source_name,"description":source_info})
+            if not self.sourceDomainName.find_one({"source": source_name}):
+                self.sourceDomainName.insert_one({"source": source_name, "description": source_info})
                 return {
-                "status": 200,
-                "data": "The source was added!!!!!!"
+                    "status": 200,
+                    "data": "The source was added!!!!!!"
                 }
             else:
                 return {
-                "status": 500,
-                "data": "The source is already inserted"
-            }
-            
+                    "status": 500,
+                    "data": "The source is already inserted"
+                }
+
         except Exception as e:
             logging.exception(e)
         return {
             "status": 500,
             "description": "Something whent wrong while trying to update the topic's article list"
         }
-
 
 
 class JSONEncoder(json.JSONEncoder):
