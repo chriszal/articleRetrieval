@@ -2,6 +2,7 @@ import requests
 from datetime import datetime
 import time
 
+
 # Init
 class NewsApi():
     def __init__(self):
@@ -18,9 +19,10 @@ class NewsApi():
                 source = article['source']['name']
                 # date_object = datetime.strptime(article['publishedAt'], '%Y-%m-%dT%H:%M:%SZ')
                 # unix_timestamp = time.mktime(date_object.timetuple())
-                articles.append({'source':source,'article':article['content'],'author':article['author'],'timestamp':article['publishedAt']})
+                articles.append({'source': source, 'article': article['content'], 'author': article['author'],
+                                 'timestamp': article['publishedAt']})
             if not articles:
-                articles = [{'source': '','article':'','author':'','timestamp':''}]
+                articles = [{'source': '', 'article': '', 'author': '', 'timestamp': ''}]
             return articles
         else:
-            return [{'source': '', 'article':'','author':'','timestamp':''}]
+            return [{'source': '', 'article': '', 'author': '', 'timestamp': ''}]
