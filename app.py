@@ -183,26 +183,36 @@ def fetch_source():
 '''
 
 
+@app.get('/user/articles/all')
+def fetch_all_articles_with_id():
+    response = db.fetch_all_articles()
+
+    return response
+
+
 @app.get('/user/articles/recommend')
 def fetch_recommendation():
-    email = request.args.get("email")
     article_id = request.args.get("id")
+
+    # Fetching the article the user asked for, for presentation reasons
+    user_article = db.find_article_by_id(article_id)["data"]
+
+    #TODO - ARTICLE RECOMENDATION
 
     G = full_graph.get_graph()
 
-    return str(list(G.edges))
+    return user_article
+    # test node id -> "63c3f5b7a4a877c4beeb8bfb"
 
-
-    #test node id -> "63c3f5b7a4a877c4beeb8bfb"
 
 if __name__ == "__main__":
     # Creating a new connection with mongo
     # threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0",debug=True,use_reloader=False)).start()
     executor = ThreadPoolExecutor(max_workers=3)
-    producerThread = KafkaProducerThread(TOPICS)
+    # producerThread = KafkaProducerThread(TOPICS)
     flaskThread = threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0", debug=True, use_reloader=False))
     executor.submit(flaskThread.start())
     time.sleep(15)
-    executor.submit(producerThread.start)
+    # executor.submit(producerThread.start)
     consumerThread = KafkaConsumerThread(TOPICS, db)
     executor.submit(consumerThread.start)

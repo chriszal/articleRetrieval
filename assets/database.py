@@ -250,13 +250,13 @@ class Database(object):
                     art_cont = article["article"]
                     src = article["source"]
                     art_author = article["author"]
-                    art_timestamp= article["timestamp"]
+                    art_timestamp = article["timestamp"]
 
                     articles[topic].append({
                         "article": art_cont,
                         "source": src,
-                        "author":art_author,
-                        "timestamp":art_timestamp
+                        "author": art_author,
+                        "timestamp": art_timestamp
                     })
 
                     if src not in sources:
@@ -319,6 +319,55 @@ class Database(object):
 
     def find_articles_from_topic(self, topic):
         return self.db[f"{topic}"].find()
+
+    def find_article_by_id(self, id):
+
+        for topic in self.TOPICS:
+            cursor = self.db[f"{topic}"].find({"_id": ObjectId(id)})
+            for article in cursor:
+                if id == str(article["_id"]):
+                    return {
+                        "status": 200,
+                        "data": {
+                            "id": str(article["_id"]),
+                            "source": str(article["source"]),
+                            "article": str(article['article']),
+                            "author": str(article["author"]),
+                            "timestamp": int(article["timestamp"])
+                        }
+                    }
+        return {
+            "status": 200,
+            "description": "There was no article with this id"
+        }
+
+    def fetch_all_articles(self):
+        all_articles = []
+        for topic in self.TOPICS:
+            try:
+                cursor = self.db[f"{topic}"].find({})
+            except Exception as e:
+                return {
+                    "status": 500,
+                    "data": f"There was an error while trying to fetch the articles for the topic {topic} form the db! Aborting!!!!"
+                }
+
+            for article in cursor:
+                all_articles.append(
+                    {
+                        "id": str(article["_id"]),
+                        "source": str(article["source"]),
+                        "article": str(article['article']),
+                        "author": str(article["author"]),
+                        "timestamp": int(article["timestamp"])
+                    }
+                )
+
+        return {
+            "status": 200,
+            "data": all_articles
+        }
+
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
