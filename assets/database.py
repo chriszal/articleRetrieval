@@ -65,7 +65,7 @@ class Database(object):
                     "description": "The article's author"
                 },
                 "timestamp": {
-                    "bsonType": "long",
+                    "bsonType": "int",
                     "description": "The publish date of the article"
                 },
 
@@ -317,6 +317,8 @@ class Database(object):
             "description": "Something whent wrong while trying to update the topic's article list"
         }
 
+    def find_articles_from_topic(self, topic):
+        return self.db[f"{topic}"].find()
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):

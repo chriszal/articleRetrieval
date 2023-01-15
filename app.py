@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from assets.database import Database
 from apis.mediawiki import MediaWikiApi
 from apis.newsapi import NewsApi
+from graph.graphMigration import GraphMigration
 import time
 # import jellyfish
 import logging
@@ -12,7 +13,6 @@ import threading
 
 # Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
-
 
 """
    Trying to automatically handle some basic and easy scenarios, so the app will not fall apart with the slightest interruption.
@@ -28,7 +28,6 @@ finally:
     except Exception as e:
         print(f"The program could not automatically restart the process -> {e}")
 
-
 try:
     media_api = MediaWikiApi()
 except Exception as e:
@@ -43,7 +42,12 @@ finally:
 TOPICS = Database.TOPICS
 # controllers implementations
 
+# Initializing the database connection
 db = Database()
+
+# Creating the graph and edges from the articles in the database.
+full_graph = GraphMigration(db, TOPICS)
+
 
 @app.route('/')
 def index():
@@ -63,9 +67,11 @@ def index():
         message='Welcome !'
     )
 
+
 '''
  USER'S API METHODS
 '''
+
 
 @app.post("/user/create")
 def create_user_controller():
@@ -77,6 +83,7 @@ def create_user_controller():
         "satus": 201,
         "data": response,
     }
+
 
 @app.put("/user/edit/keywords")
 def edit_user_keywords_controller():
@@ -90,6 +97,7 @@ def edit_user_keywords_controller():
         "data": response,
     }
 
+
 @app.get('/user/articles')
 def get_articles():
     email = request.args.get("email")
@@ -99,6 +107,7 @@ def get_articles():
     # Return the articles to the user
     return response
 
+
 @app.delete("/user/delete")
 def delete_user_controller():
     email = request.args.get("email")
@@ -107,9 +116,11 @@ def delete_user_controller():
 
     return response
 
+
 '''
  Topics Controllers
 '''
+
 
 @app.put("/topics/add/article")
 def add_articles_to_topic():
@@ -119,6 +130,7 @@ def add_articles_to_topic():
     response = db.insert_article(topic, data)
 
     return response
+
 
 # @app.get("/topics/articles/<string:keyword>")
 # def fetch_users_articles_controller(user_keyword):
@@ -142,6 +154,7 @@ def add_articles_to_topic():
  Source Domain Controllers
 '''
 
+
 @app.get('/fetch')
 def fetch_source():
     domains = []
@@ -164,26 +177,27 @@ def fetch_source():
 
     return jsonify(domains)
 
+
 '''
  Article prediction endpoints
 '''
+
 
 @app.get('/user/articles/recommend')
 def fetch_recommendation():
     email = request.args.get("email")
     article_id = request.args.get("id")
 
-    return jsonify(
-        status=True,
-        message='Test recommendations'
-    )
+    G = full_graph.get_graph()
+
+    return str(list(G.edges))
 
 
+    #test node id -> "63c3f5b7a4a877c4beeb8bfb"
 
 if __name__ == "__main__":
     # Creating a new connection with mongo
-    # threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0",debug=True,use_reloader=False)).start()    
-
+    # threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0",debug=True,use_reloader=False)).start()
     executor = ThreadPoolExecutor(max_workers=3)
     producerThread = KafkaProducerThread(TOPICS)
     flaskThread = threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0", debug=True, use_reloader=False))
