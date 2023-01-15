@@ -13,8 +13,32 @@ import threading
 # Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
 
-news_api = NewsApi()
-media_api = MediaWikiApi()
+
+"""
+   Trying to automatically handle some basic and easy scenarios, so the app will not fall apart with the slightest interruption.
+"""
+try:
+    news_api = NewsApi()
+except Exception as e:
+    print(f"There was an exception raised! -> {e}. The app will try to re-start this process automatically")
+finally:
+    try:
+        for _ in range(2):
+            news_api = NewsApi()
+    except Exception as e:
+        print(f"The program could not automatically restart the process -> {e}")
+
+
+try:
+    media_api = MediaWikiApi()
+except Exception as e:
+    print(f"There was an exception raised! -> {e}. The app will try to re-start this process automatically")
+finally:
+    try:
+        for _ in range(2):
+            media_api = MediaWikiApi()
+    except Exception as e:
+        print(f"The program could not automatically restart the process -> {e}")
 
 TOPICS = Database.TOPICS
 # controllers implementations

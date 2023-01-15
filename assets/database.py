@@ -180,7 +180,7 @@ class Database(object):
                 }
             })
         except CollectionInvalid as ci:
-            print(f"You probabli do not have the right access or the collection already exists {ci}")
+            print(f"You probably do not have the right access or the collection already exists {ci}")
         finally:
             self.users = self.db["users"]
 
@@ -293,7 +293,7 @@ class Database(object):
             logging.exception(e)
         return {
             "status": 500,
-            "description": "Something whent wrong while trying to update the topic's article list"
+            "description": "Something went wrong while trying to update the topic's article list"
         }
 
     def insert_source_info(self, source_name, source_info):
