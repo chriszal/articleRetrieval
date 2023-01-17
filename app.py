@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from kafka_bus.kafkaProducerThread import KafkaProducerThread
 from kafka_bus.kafkaConsumerThread import KafkaConsumerThread
+from kafka_bus.kafkaAdminClient import KafkaAdminThread
 from concurrent.futures import ThreadPoolExecutor
 from assets.database import Database
 from apis.mediawiki import MediaWikiApi
@@ -11,6 +12,7 @@ import time
 import logging
 import threading
 
+logging.basicConfig(level=logging.INFO)
 # Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
 
@@ -208,11 +210,13 @@ def fetch_recommendation():
 if __name__ == "__main__":
     # Creating a new connection with mongo
     # threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0",debug=True,use_reloader=False)).start()
-    executor = ThreadPoolExecutor(max_workers=3)
-    # producerThread = KafkaProducerThread(TOPICS)
+    executor = ThreadPoolExecutor(max_workers=4)
+    producerThread = KafkaProducerThread(TOPICS,logging)
+    adminThread = KafkaAdminThread(TOPICS)
+    executor.submit(adminThread.start)
     flaskThread = threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0", debug=True, use_reloader=False))
     executor.submit(flaskThread.start())
     time.sleep(15)
-    # executor.submit(producerThread.start)
-    consumerThread = KafkaConsumerThread(TOPICS, db)
+    executor.submit(producerThread.start)
+    consumerThread = KafkaConsumerThread(TOPICS, db,logging)
     executor.submit(consumerThread.start)

@@ -7,6 +7,13 @@ from kafka.errors import NoBrokersAvailable
 import time
 import logging
 
+def on_send_success(record_metadata):
+    return
+    # print(record_metadata.topic)
+    # print(record_metadata.partition)
+
+def on_send_error(excp):
+    print(excp)
 
 def call_apis(self, topics, news_api, media_api):
     try:
@@ -14,7 +21,7 @@ def call_apis(self, topics, news_api, media_api):
                                  max_block_ms=100000,
                                  value_serializer=lambda x: json.dumps(x).encode('utf-8'))
     except NoBrokersAvailable as err:
-        self.logger.error("Unable to find a broker: {0}".format(err))
+        # self.logger.error("Unable to find a broker: {0}".format(err))
         time.sleep(1)
 
     domains = []
@@ -27,12 +34,12 @@ def call_apis(self, topics, news_api, media_api):
                         if article['source'] not in domains:
                             domains.append(article['source'])
 
-                        producer.send(topic, value=article)
+                        producer.send(topic, value=article).add_callback(on_send_success).add_errback(on_send_error)
                         producer.flush()
             for domain in domains:
                 source_info = media_api.get_source_domain_info(domain)
                 if source_info:
-                    producer.send("sources", value={"source_name": domain, "source_info": source_info})
+                    producer.send("sources", value={"source_name": domain, "source_info": source_info}).add_callback(on_send_success).add_errback(on_send_error)
 
                     # Flush the producer to ensure all messages are sent
                     producer.flush()
@@ -40,13 +47,14 @@ def call_apis(self, topics, news_api, media_api):
         self.logger.error("Unable to send message. The producer does not exist.")
 
 
+
 class KafkaProducerThread:
-    def __init__(self, topics):
+    def __init__(self, topics,logger):
         self.topics = topics
         self.news_api = NewsApi()
         self.media_api = MediaWikiApi()
-        logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)
+        # logger = logging.getLogger()
+        # logger.setLevel(logging.DEBUG)
         self.logger = logger
 
     def start(self):

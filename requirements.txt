@@ -11,3 +11,6 @@ pymediawiki
 # wikipedia-api
 beanie
 networkx
+gunicorn
+eventlet
+gevent
