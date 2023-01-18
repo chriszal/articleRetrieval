@@ -3,7 +3,7 @@ from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
 from threading import Timer
 from json import dumps
-
+import datetime
 import time
 import json
 # from apis.newsapi import NewsApi
@@ -52,13 +52,18 @@ class NewsApi():
 
             for article in response_dict['articles']:
                 source = article['source']['name']
-                articles.append({'source': source, 'article': article['content']})
-
+                author = article['author']
+                if author==None:
+                    author = ""
+                date_object = datetime.strptime(article['publishedAt'], '%Y-%m-%dT%H:%M:%SZ')
+                unix_timestamp = int(time.mktime(date_object.timetuple()))
+                articles.append({'source': source, 'article': article['content'], 'author': author,
+                                 'timestamp': unix_timestamp})
             if not articles:
-                articles = [{'source': '', 'article': ''}]
+                articles = [{'source': '', 'article': '', 'author': '', 'timestamp': ''}]
             return articles
         else:
-            return [{'source': '', 'article': ''}]
+            return [{'source': '', 'article': '', 'author': '', 'timestamp': ''}]
 
     #     articles =[]
     # for keyword in keywords:

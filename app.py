@@ -9,7 +9,9 @@ from graph.graphMigration import GraphMigration
 import time
 import threading
 import networkx as nx
+import logging
 
+logging.basicConfig(level=logging.INFO)
 # Name of the application module or package so flask knows where to look for resources
 app = Flask(__name__)
 
@@ -46,7 +48,6 @@ db = Database()
 
 # Creating the graph and edges from the articles in the database.
 full_graph = GraphMigration(db, TOPICS)
-full_graph.automatic_updater()
 
 
 @app.route('/')
@@ -165,14 +166,18 @@ def fetch_source():
 
     return jsonify(domains)
 
+
 '''
  Article prediction endpoints
 '''
+
+
 @app.get('/user/articles/all')
 def fetch_all_articles_with_id():
     response = db.fetch_all_articles()
 
     return response
+
 
 @app.get('/user/articles/recommend')
 def fetch_recommendation():
@@ -251,5 +256,5 @@ if __name__ == "__main__":
     executor.submit(flaskThread.start())
     time.sleep(15)
     executor.submit(producerThread.start)
-    consumerThread = KafkaConsumerThread(TOPICS, db)
+    consumerThread = KafkaConsumerThread(TOPICS, db, logging)
     executor.submit(consumerThread.start)
