@@ -1,16 +1,12 @@
 newsapi-python
-flask
-pymongo
+flask~=2.2.2
+pymongo~=4.3.3
 kafka-python
 Flask-PyMongo
-requests
+requests~=2.28.2
 pymediawiki
-pydantic
-jellyfish
+pydantic~=1.10.4
 pymediawiki
-# wikipedia-api
-beanie
-networkx
-gunicorn
-eventlet
-gevent
+beanie~=1.16.8
+networkx~=3.0
+

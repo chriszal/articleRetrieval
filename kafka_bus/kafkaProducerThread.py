@@ -59,6 +59,6 @@ class KafkaProducerThread:
         # Call the APIs immediately when the thread starts
         call_apis(self, self.topics, self.news_api, self.media_api)
 
-        # Use a timer to schedule the next API call
+        # Use a timer to schedule the next API call in seconds
         timer = Timer(7200, self.start)
         timer.start()

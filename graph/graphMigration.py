@@ -1,3 +1,5 @@
+from threading import Timer
+
 import networkx as nx
 import json
 
@@ -17,10 +19,6 @@ class GraphMigration:
         # Creating a new graph
         self.G = nx.Graph()
 
-        #Automaticaly creatin the nodes from the database
-        self.create_nodes()
-        #Automaticaly creating the edges from the already created nodes
-        self.create_edges()
 
     def get_graph(self):
         return self.G
@@ -32,13 +30,26 @@ class GraphMigration:
         for topic in self.topics:
             cursor_article = self.db.find_articles_from_topic(topic)
             for article in cursor_article:
-                self.G.add_nodes_from([
-                    (
-                        str(article["_id"]),
-                        {"source": str(article["source"]), "article": str(article['article']),
-                         "author": str(article["author"]), "timestamp": int(article["timestamp"])}
-                    )
-                ])
+                if not self.G.has_node(str(article["_id"])):
+                    self.G.add_nodes_from([
+                        (
+                            str(article["_id"]),
+                            {"source": str(article["source"]), "article": str(article['article']),
+                             "author": str(article["author"]), "timestamp": int(article["timestamp"])}
+                        )
+                    ])
+
+    #TODO-Optimize it....maybe not updating again the hole thing of edges???!?!?!!?
+    def update_graph(self):
+        #Here we are creating the new nodes
+        self.create_nodes()
+        #here we are creating all the edges again,
+        '''
+            Adding an edge that already exists updates the edge data. 
+            Many NetworkX algorithms designed for weighted graphs use an edge 
+            attribute (by default weight )
+        '''
+        self.create_edges()
 
     def create_edges(self):
 
@@ -55,6 +66,11 @@ class GraphMigration:
             cnt = True
             self.G.add_node(0, timestamp=-1, node="a0")
             for node_id in list_of_nodes:
+
+                #We avoind creating self loops
+                if node == node_id:
+                    continue
+
                 # Not the best metric on the planet though....!
                 if (abs(timestamp - self.G.nodes[node_id]["timestamp"])) < self.G.nodes[0]["timestamp"]:
                     self.G.nodes[0]["node"] = node_id
@@ -80,5 +96,11 @@ class GraphMigration:
                 self.G.add_edge(node, self.G.nodes[0]["node"], timestamp=self.G.nodes[0]["timestamp"])
 
 
+    def automatic_updater(self):
+        # caling the right function in order to update the graph
+        self.update_graph()
 
+        # Use a timer to schedule the next API call in seconds
+        timer = Timer(64800, self.automatic_updater)
+        timer.start()
 

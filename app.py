@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from kafka_bus.kafkaProducerThread import KafkaProducerThread
 from kafka_bus.kafkaConsumerThread import KafkaConsumerThread
 from concurrent.futures import ThreadPoolExecutor
@@ -7,9 +7,9 @@ from apis.mediawiki import MediaWikiApi
 from apis.newsapi import NewsApi
 from graph.graphMigration import GraphMigration
 import time
-# import jellyfish
-import logging
 import threading
+import networkx as nx
+import logging
 
 logging.basicConfig(level=logging.INFO)
 # Name of the application module or package so flask knows where to look for resources
@@ -68,12 +68,9 @@ def index():
         message='Welcome !'
     )
 
-
 '''
  USER'S API METHODS
 '''
-
-
 @app.post("/user/create")
 def create_user_controller():
     data = request.get_json()
@@ -84,7 +81,6 @@ def create_user_controller():
         "satus": 201,
         "data": response,
     }
-
 
 @app.put("/user/edit/keywords")
 def edit_user_keywords_controller():
@@ -98,7 +94,6 @@ def edit_user_keywords_controller():
         "data": response,
     }
 
-
 @app.get('/user/articles')
 def get_articles():
     email = request.args.get("email")
@@ -108,7 +103,6 @@ def get_articles():
     # Return the articles to the user
     return response
 
-
 @app.delete("/user/delete")
 def delete_user_controller():
     email = request.args.get("email")
@@ -117,12 +111,9 @@ def delete_user_controller():
 
     return response
 
-
 '''
  Topics Controllers
 '''
-
-
 @app.put("/topics/add/article")
 def add_articles_to_topic():
     topic = request.args.get("topic")
@@ -131,7 +122,6 @@ def add_articles_to_topic():
     response = db.insert_article(topic, data)
 
     return response
-
 
 # @app.get("/topics/articles/<string:keyword>")
 # def fetch_users_articles_controller(user_keyword):
@@ -154,8 +144,6 @@ def add_articles_to_topic():
 '''
  Source Domain Controllers
 '''
-
-
 @app.get('/fetch')
 def fetch_source():
     domains = []
@@ -195,24 +183,78 @@ def fetch_all_articles_with_id():
 def fetch_recommendation():
     article_id = request.args.get("id")
 
-    # Fetching the article the user asked for, for presentation reasons
-    user_article = db.find_article_by_id(article_id)["data"]
-
-    #TODO - ARTICLE RECOMENDATION
-
+    # Geting the actual graph, ready and connected!
     G = full_graph.get_graph()
 
-    return user_article
-    # test node id -> "63c3f5b7a4a877c4beeb8bfb"
+    # TODO -Async call
+    # #creating a thread excecutor instance in order to leverage async functions
+    # executor = ThreadPoolExecutor(max_workers=3)
 
+    """
+        Here we are implementing a simple logic in order to recommend an article to the user
+    """
+    # here we find the neighbor node id's for the node(article) the user requested
+    user_node_neighbors = [n for n in nx.all_neighbors(G, article_id)]
+
+    # #Ading the requested node id along with the other in  order to take the right subgraph
+    # user_node_neighbors.append(article_id)
+    # #Here we are using the build in methods in order to get a sub-graph and apply a data mining algorithm
+    # H = G.subgraph(user_node_neighbors)
+
+    # Now we find the clossest node to the one requested, and return it to the user along with his original response
+    cen_dict = nx.closeness_centrality(G)
+
+    sorted_dict = {}
+    sorted_keys = sorted(cen_dict, key=cen_dict.get, reverse=True)
+
+    for w in sorted_keys:
+        sorted_dict[w] = cen_dict[w]
+
+    for node in sorted_dict:
+        if node == article_id:
+            max_deg = max(G.degree(user_node_neighbors))
+            return {
+                "status": 200,
+                "Recommendation Article": G.nodes[max_deg[0]],
+                "User Article": G.nodes[article_id]
+            }
+
+    #Here we are recomending something because we did not had any lack with the other mechanism.
+    #This is an extreme corner case. And we try to recomend something instead of nothing.
+    return {
+        "status": 200,
+        "Recommendation Article": G.nodes[list(sorted_dict.items())[0][0]],
+        "User Article": G.nodes[article_id]
+    }
+
+    # communities_generator = nx.algorithms.community.girvan_newman(G)
+    # top_level_communities = next(communities_generator)
+    # next_level_communities = next(communities_generator)
+    #
+    # for community in next(communities_generator):
+    #     for nodes in community:
+    #         if article_id in nodes:
+    #             return str(f"{[x for x in community], article_id}")
+    # return str(type(communities_generator))
+    #
+    # return {
+    #     "User Article": user_article
+    #     "data": str(f"{[x for x in next_level_communities]}")
+    # }
+    # test node id -> "63c5b4aafd77d015069e499f"
+
+"""
+    Helper Functions
+"""
 
 if __name__ == "__main__":
     # Creating a new connection with mongo
+    # threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0",debug=True,use_reloader=False)).start()
     executor = ThreadPoolExecutor(max_workers=3)
-    producerThread = KafkaProducerThread(TOPICS,logging)
+    producerThread = KafkaProducerThread(TOPICS)
     flaskThread = threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0", debug=True, use_reloader=False))
     executor.submit(flaskThread.start())
     time.sleep(15)
     executor.submit(producerThread.start)
-    consumerThread = KafkaConsumerThread(TOPICS, db,logging)
+    consumerThread = KafkaConsumerThread(TOPICS, db, logging)
     executor.submit(consumerThread.start)
