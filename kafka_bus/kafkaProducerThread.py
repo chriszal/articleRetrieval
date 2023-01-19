@@ -21,7 +21,7 @@ def call_apis(self, topics, news_api, media_api):
                                  max_block_ms=100000,
                                  value_serializer=lambda x: json.dumps(x).encode('utf-8'))
     except NoBrokersAvailable as err:
-        # self.logger.error("Unable to find a broker: {0}".format(err))
+        self.logger.error("Unable to find a broker: {0}".format(err))
         time.sleep(1)
 
     domains = []
@@ -53,12 +53,9 @@ class KafkaProducerThread:
         self.topics = topics
         self.news_api = NewsApi()
         self.media_api = MediaWikiApi()
-        # logger = logging.getLogger()
-        # logger.setLevel(logging.DEBUG)
         self.logger = logger
 
     def start(self):
-        # time.sleep(10)
         # Call the APIs immediately when the thread starts
         call_apis(self, self.topics, self.news_api, self.media_api)
 

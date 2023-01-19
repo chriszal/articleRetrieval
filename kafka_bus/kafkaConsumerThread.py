@@ -14,18 +14,13 @@ class KafkaConsumerThread:
         self.topics = topics
         self.db = db
         self.logger = logger
-        # self.logger = logging.getLogger()
-        # self.logger.debug("Initializing the consumer")
 
     def start(self):
-        # Wait for a few seconds before starting the Kafka consumer
-        # time.sleep(15)
         self.logger.debug("Getting the kafka consumer")
         try:
             consumer = KafkaConsumer(bootstrap_servers=['kafka:29092'],
                                      auto_offset_reset='earliest',
-                                    #  group_id='my_group',
-                                     enable_auto_commit=False,
+                                     enable_auto_commit=True,
                                      value_deserializer=lambda x: json.loads(x.decode('utf-8')))
         except NoBrokersAvailable as err:
             self.logger.error("Unable to find a broker: {0}".format(err))
