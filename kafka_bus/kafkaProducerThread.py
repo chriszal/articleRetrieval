@@ -4,22 +4,19 @@ from apis.newsapi import NewsApi
 from apis.mediawiki import MediaWikiApi
 from kafka import KafkaProducer
 from kafka.errors import NoBrokersAvailable
+from kafka.errors import KafkaError
+import hashlib
 import time
 import logging
 
-def on_send_success(record_metadata):
-    return
-    # print(record_metadata.topic)
-    # print(record_metadata.partition)
-
-def on_send_error(excp):
-    print(excp)
 
 def call_apis(self, topics, news_api, media_api):
     try:
         producer = KafkaProducer(bootstrap_servers=['kafka:29092'],
                                  max_block_ms=100000,
+                                #  group_id='my_group',
                                  value_serializer=lambda x: json.dumps(x).encode('utf-8'))
+        # producer.create_topics(topics)
     except NoBrokersAvailable as err:
         self.logger.error("Unable to find a broker: {0}".format(err))
         time.sleep(1)
@@ -33,16 +30,30 @@ def call_apis(self, topics, news_api, media_api):
                     if article['source'] != '':
                         if article['source'] not in domains:
                             domains.append(article['source'])
-
-                        producer.send(topic, value=article).add_callback(on_send_success).add_errback(on_send_error)
-                        producer.flush()
+                        key = article['author'] +"_"+str(article['timestamp'])
+                    
+                        future = producer.send(topic, key=key.encode(), value=article)
+                        try:
+                            record_metadata = future.get(timeout=10)
+                            producer.flush()
+                            # print(record_metadata)
+                        except KafkaError as e:
+                            # Decide what to do if produce request failed...
+                            print(e)
+                        
             for domain in domains:
                 source_info = media_api.get_source_domain_info(domain)
                 if source_info:
-                    producer.send("sources", value={"source_name": domain, "source_info": source_info}).add_callback(on_send_success).add_errback(on_send_error)
+                    future_s = producer.send("sources",key=domain.encode(), value={"source_name": domain, "source_info": source_info})
 
-                    # Flush the producer to ensure all messages are sent
-                    producer.flush()
+                    try:
+                        record_metadata_s = future_s.get(timeout=10)
+                        producer.flush()
+                        # print(record_metadata_s)
+                    except KafkaError as e:
+                        # Decide what to do if produce request failed...
+                        print(e)
+            producer.close()
     except AttributeError:
         self.logger.error("Unable to send message. The producer does not exist.")
 

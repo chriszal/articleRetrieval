@@ -34,9 +34,37 @@ services:
       KAFKA_LISTENERS: INSIDE://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_RETENTION_HOURS : 1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock%
 
+  # init-kafka:
+  #   image: wurstmeister/kafka
+  #   depends_on:
+  #     - kafka
+  #   entrypoint: [ '/bin/sh', '-c' ]
+  #   command: |
+  #     "
+  #     # blocks until kafka is reachable
+  #     echo "Start: Sleep 15 seconds"
+  #     sleep 30;
+  #     wait;S
+  #     kafka-topics --bootstrap-server kafka:29092 --list
+
+  #     echo -e 'Creating kafka topics'
+  #     kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic education --replication-factor 1 --partitions 1
+  #     kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic health --replication-factor 1 --partitions 1
+  #     kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic business --replication-factor 1 --partitions 1
+  #     kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic motorsport --replication-factor 1 --partitions 1
+  #     kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic science --replication-factor 1 --partitions 1
+  #     kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic space --replication-factor 1 --partitions 1
+  #     kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic technology --replication-factor 1 --partitions 1
+  #     kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic war --replication-factor 1 --partitions 1
+  #     kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic sources --replication-factor 1 --partitions 1
+
+  #     echo -e 'Successfully created the following topics:'
+  #     kafka-topics --bootstrap-server kafka:29092 --list
+  #     "
   flask_api:
     build:
       context: . #Very important it refers where the root will be for the build.

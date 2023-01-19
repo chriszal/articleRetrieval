@@ -3,14 +3,15 @@ from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
 from threading import Timer
 from json import dumps
-import datetime
+from datetime import datetime
+from kafka.errors import KafkaError
 import time
 import json
 # from apis.newsapi import NewsApi
 # from apis.mediawiki import MediaWikiApi
 from mediawiki import MediaWiki, DisambiguationError, PageError
-
-
+from kafka.errors import NoBrokersAvailable
+import hashlib
 # Init
 class MediaWikiApi():
     def __init__(self):
@@ -20,6 +21,7 @@ class MediaWikiApi():
         # Search for articles with the source domain name
         try:
             articles = self.mediawiki.page(source_name + " News")
+            # print("test"+str(articles))
         except DisambiguationError as e:
             # Handle the case where multiple pages are found
             # return e.options
@@ -48,13 +50,14 @@ class NewsApi():
                                 params={'q': keyword, 'apiKey': self.secret, 'language': 'en'})
         if response.status_code == 200:
             response_dict = response.json()
+            # print(response_dict)
             articles = []
 
             for article in response_dict['articles']:
                 source = article['source']['name']
                 author = article['author']
                 if author==None:
-                    author = ""
+                    author = ''
                 date_object = datetime.strptime(article['publishedAt'], '%Y-%m-%dT%H:%M:%SZ')
                 unix_timestamp = int(time.mktime(date_object.timetuple()))
                 articles.append({'source': source, 'article': article['content'], 'author': author,
@@ -76,29 +79,51 @@ class NewsApi():
 
 
 def call_apis(topics, news_api, media_api):
-    producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
+    
+    try:
+
+        producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
                              max_block_ms=100000,
                              value_serializer=lambda x: dumps(x).encode('utf-8'))
-
+        print("In")
+    except NoBrokersAvailable as err:
+        print(err)
     domains = []
 
     for topic in topics:
+        print(topic)
         articles = news_api.get_articles(topic)
+        # print(articles)
         for article in articles:
+            # print(article)
             if article['source'] != '':
                 if article['source'] not in domains:
                     domains.append(article['source'])
-                producer.send(topic, value=article)
-                # Flush the producer to ensure the message is sent
-                producer.flush()
+                # print(article)
+                key = article['author'] +"_"+str(article['timestamp'])
+                # print(key.encode())
+                future = producer.send(topic, key=key.encode(), value=article)
+                try:
+                    record_metadata = future.get(timeout=10)
+                    producer.flush()
+                    print(record_metadata)
+                except KafkaError as e:
+                    # Decide what to do if produce request failed...
+                    print(e)
     for domain in domains:
         source_info = media_api.get_source_domain_info(domain)
         if source_info:
-            producer.send("sources", value={"source_name": domain, "source_info": source_info})
-            producer.flush()
+            print(domain)
+            try:
+                producer.send("sources",key=domain.encode(), value={"source_name": domain, "source_info": source_info})
+
+                # Flush the producer to ensure all messages are sent
+                producer.flush()
+            except Exception as e:
+                print("e2")
 
     # Flush the producer to ensure all messages are sent
-
+    producer.close()
 
 class KafkaProducerThread:
     def __init__(self, topics):
@@ -107,13 +132,16 @@ class KafkaProducerThread:
         self.media_api = MediaWikiApi()
 
     def start(self):
+        print("Start")
         # Wait for a few seconds before starting the Kafka consumer
         # Call the APIs immediately when the thread starts
-        call_apis(self.topics, self.news_api, self.media_api)
-
+        
+        while True:
+            call_apis(self.topics, self.news_api, self.media_api)
+            time.sleep(10)
         # Use a timer to schedule the next API call
-        timer = Timer(100, self.start)
-        timer.start()
+        # timer = Timer(10, self.start)
+        # timer.start()
 
 
 if __name__ == "__main__":
@@ -133,3 +161,15 @@ if __name__ == "__main__":
 
     # Start the Kafka producer thread
     future = executor.submit(thread.start)
+
+    # try:
+    #     future.get(TimeoutError=10)
+# future = producer.send(topic, key=key, value=article)
+#                 producer.flush()
+
+#                 try:
+#                     record_metadata = future.get(timeout=10)
+#                     print(record_metadata)
+#                 except KafkaError as e:
+#                     # Decide what to do if produce request failed...
+#                     print(e)

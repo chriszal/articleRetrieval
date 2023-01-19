@@ -251,10 +251,14 @@ if __name__ == "__main__":
     # Creating a new connection with mongo
     # threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0",debug=True,use_reloader=False)).start()
     executor = ThreadPoolExecutor(max_workers=3)
-    producerThread = KafkaProducerThread(TOPICS)
+    producerThread = KafkaProducerThread(TOPICS,logging)
+    consumerThread = KafkaConsumerThread(TOPICS, db, logging)
     flaskThread = threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0", debug=True, use_reloader=False))
     executor.submit(flaskThread.start())
     time.sleep(15)
     executor.submit(producerThread.start)
-    consumerThread = KafkaConsumerThread(TOPICS, db, logging)
     executor.submit(consumerThread.start)
+    
+    
+   
+   
