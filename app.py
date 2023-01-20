@@ -3,7 +3,6 @@ from kafka_bus.kafkaProducerThread import KafkaProducerThread
 from kafka_bus.kafkaConsumerThread import KafkaConsumerThread
 from concurrent.futures import ThreadPoolExecutor
 from assets.database import Database
-from apis.mediawiki import MediaWikiApi
 from apis.newsapi import NewsApi
 from graph.graphMigration import GraphMigration
 import time
@@ -37,7 +36,7 @@ db = Database()
 
 # Creating the graph and edges from the articles in the database.
 full_graph = GraphMigration(db, TOPICS)
-
+full_graph.automatic_updater()
 @app.route('/')
 def index():
     # user = {
@@ -139,16 +138,29 @@ def add_articles_to_topic():
 def fetch_all_articles_with_id():
     response = db.fetch_all_articles()
 
+
+
     return response
 
+
+@app.get('/test/updateg')
+def update_graph():
+    try:
+        full_graph.update_graph()
+
+        return "doulepseeeeeeeeeee NAIIIIIIII YEAHHHH"
+
+    except Exception as e:
+        return {
+            "satus": 500,
+            "description": str(e)
+        }
 
 @app.get('/user/articles/recommend')
 def fetch_recommendation():
     article_id = request.args.get("id")
 
-    #Updating the graph in order to have the updated graph unvailable for the user
-    full_graph.update_graph()
-
+    user_article = db.find_article_by_id(article_id)["data"]
     # Geting the actual graph, ready and connected!
     G = full_graph.get_graph()
 
@@ -181,16 +193,16 @@ def fetch_recommendation():
             max_deg = max(G.degree(user_node_neighbors))
             return {
                 "status": 200,
-                "Recommendation Article": G.nodes[max_deg[0]],
-                "User Article": G.nodes[article_id]
+                "Recommendation Article": db.find_article_by_id(max_deg[0])["data"],
+                "User Article": user_article
             }
 
     #Here we are recomending something because we did not had any lack with the other mechanism.
     #This is an extreme corner case. And we try to recomend something instead of nothing.
     return {
         "status": 200,
-        "Recommendation Article": G.nodes[list(sorted_dict.items())[0][0]],
-        "User Article": G.nodes[article_id]
+        "Recommendation Article": db.find_article_by_id(list(sorted_dict.items())[0][0])["data"],
+        "User Article": user_article
     }
 
     # communities_generator = nx.algorithms.community.girvan_newman(G)
@@ -218,7 +230,7 @@ if __name__ == "__main__":
     # threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0",debug=True,use_reloader=False)).start()
     executor = ThreadPoolExecutor(max_workers=3)
     producerThread = KafkaProducerThread(TOPICS,logging)
-    consumerThread = KafkaConsumerThread(TOPICS, db, logging)
+    consumerThread = KafkaConsumerThread(TOPICS, db, logging, full_graph.update_graph)
 
     flaskThread = threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0", debug=True, use_reloader=False))
     executor.submit(flaskThread.start())

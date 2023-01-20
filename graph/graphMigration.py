@@ -33,9 +33,7 @@ class GraphMigration:
                 if not self.G.has_node(str(article["_id"])):
                     self.G.add_nodes_from([
                         (
-                            str(article["_id"]),
-                            {"source": str(article["source"]), "article": str(article['article']),
-                             "author": str(article["author"]), "timestamp": int(article["timestamp"])}
+                            str(article["_id"])
                         )
                     ])
 
@@ -53,37 +51,55 @@ class GraphMigration:
 
     def create_edges(self):
 
+        #getting all the nodeId's
         list_of_nodes = list(self.G.nodes)
+
+        #Getting all the nodes because if we add one search for each node we are going to destroy our database and the result would take super long.
+        articles_obj_list = self.db.fetch_all_articles()["data"]
+
+        #Looping over node id's
         for node in list_of_nodes:
-            timestamp = self.G.nodes[node]["timestamp"]
-            source = self.G.nodes[node]["source"]
-            author = self.G.nodes[node]["author"]
+
+            article_match = next((x for x in articles_obj_list if x["id"] == node), None)
+
+            if article_match is None:
+                continue
+
+            timestamp = int(article_match["timestamp"])
+            source = str(article_match["source"])
+            author = str(article_match["author"])
 
             # This is a faster way to loop over a large number of elements
             # candidates_to_add_edges = [node_id for node_id in list_of_nodes if
-            #                            (source == G.nodes[node_id]["source"] or author == G.nodes[node_id]["author"])]
+            # (source == G.nodes[node_id]["source"] or author == G.nodes[node_id]["author"])]
 
             cnt = True
             self.G.add_node(0, timestamp=-1, node="a0")
-            for node_id in list_of_nodes:
+            # Looping over candidate node id's
 
+
+            for node_id in list_of_nodes:
+                article_match_2 = next((x for x in articles_obj_list if x["id"] == node_id), None)
+
+                if article_match_2 is None:
+                    continue
                 #We avoind creating self loops
                 if node == node_id:
                     continue
 
                 # Not the best metric on the planet though....!
-                if (abs(timestamp - self.G.nodes[node_id]["timestamp"])) < self.G.nodes[0]["timestamp"]:
+                if (abs(timestamp - int(article_match_2["timestamp"]))) < self.G.nodes[0]["timestamp"]:
                     self.G.nodes[0]["node"] = node_id
-                    self.G.nodes[0]["timestamp"] = abs(timestamp - self.G.nodes[node_id]["timestamp"])
+                    self.G.nodes[0]["timestamp"] = abs(timestamp - int(article_match_2["timestamp"]))
 
                 # Here we take the case where we have the same source in order to create an edge between the two nodes
-                if source == self.G.nodes[node_id]["source"]:
+                if source == article_match_2["source"]:
                     self.G.add_edge(node, node_id, source=source)
                     cnt = False
                     continue  # we jump straight to the next iteration
 
                 # Here we take the case where we have the same author in order to create an edge between the two nodes
-                if author == self.G.nodes[node_id]["author"]:
+                if author == article_match_2["author"]:
                     self.G.add_edge(node, node_id, author=author)
                     cnt = False
                     continue  # we jump straight to the next iteration

@@ -10,11 +10,12 @@ class ConnectionException(Exception):
 
 
 class KafkaConsumerThread:
-    def __init__(self, topics, db,logger):
+    def __init__(self, topics, db,logger, updater_fun):
         self.topics = topics
         self.db = db
         self.logger = logger
         self.processed_keys = set()
+        self.updater_fun = updater_fun
 
     def start(self):
         print("in consumer")
@@ -40,6 +41,8 @@ class KafkaConsumerThread:
                         self.db.insert_source_info(message.value["source_name"], message.value["source_info"])
                     else:
                         self.db.insert_article(message.topic, [message.value])
+
+            self.updater_fun()
         except NoBrokersAvailable as err:
             print("No brokers")
             self.logger.error("Unable to find a broker: {0}".format(err))
