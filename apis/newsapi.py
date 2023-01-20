@@ -6,7 +6,8 @@ import time
 # Init
 class NewsApi():
     def __init__(self):
-        self.secret = "420d1582b00240789d9fc79e7943e61f"
+        # self.secret = "420d1582b00240789d9fc79e7943e61f"
+        self.secret = "26201851ac9241ebab5eeb4bc239dfdd"
 
     def get_articles(self, keyword):
         response = requests.get("https://newsapi.org/v2/everything",
