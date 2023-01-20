@@ -146,6 +146,9 @@ def fetch_all_articles_with_id():
 def fetch_recommendation():
     article_id = request.args.get("id")
 
+    #Updating the graph in order to have the updated graph unvailable for the user
+    full_graph.update_graph()
+
     # Geting the actual graph, ready and connected!
     G = full_graph.get_graph()
 
