@@ -30,8 +30,7 @@ class KafkaConsumerThread:
             consumer.subscribe(self.topics + ["sources"])
 
             for message in consumer:
-                print(message.topic)
-                self.logger(message)
+                self.logger.info(message)
                 if message.key in self.processed_keys:
                     # skip this message, as it's a duplicate
                     continue

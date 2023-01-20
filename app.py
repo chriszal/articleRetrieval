@@ -29,17 +29,6 @@ finally:
     except Exception as e:
         print(f"The program could not automatically restart the process -> {e}")
 
-try:
-    media_api = MediaWikiApi()
-except Exception as e:
-    print(f"There was an exception raised! -> {e}. The app will try to re-start this process automatically")
-finally:
-    try:
-        for _ in range(2):
-            media_api = MediaWikiApi()
-    except Exception as e:
-        print(f"The program could not automatically restart the process -> {e}")
-
 TOPICS = Database.TOPICS
 # controllers implementations
 
@@ -48,7 +37,6 @@ db = Database()
 
 # Creating the graph and edges from the articles in the database.
 full_graph = GraphMigration(db, TOPICS)
-
 
 @app.route('/')
 def index():
@@ -141,31 +129,6 @@ def add_articles_to_topic():
 
 #     return "There are no anvailable records for the given keyword, please use one that is supported and try again", 500
 
-'''
- Source Domain Controllers
-'''
-@app.get('/fetch')
-def fetch_source():
-    domains = []
-    object = []
-    for topic in TOPICS:
-        articles = news_api.get_articles(topic)
-        for article in articles:
-            if article['source'] != '':
-                if article['source'] not in domains:
-                    domains.append(article['source'])
-                # producer.send(topic,article)
-
-    for domain in domains:
-        source_info = media_api.get_source_domain_info(domain)
-        if source_info:
-            # producer.send("sources", value=source_info)
-            object.append(source_info)
-        else:
-            object.append('')
-
-    return jsonify(domains)
-
 
 '''
  Article prediction endpoints
@@ -253,11 +216,13 @@ if __name__ == "__main__":
     executor = ThreadPoolExecutor(max_workers=3)
     producerThread = KafkaProducerThread(TOPICS,logging)
     consumerThread = KafkaConsumerThread(TOPICS, db, logging)
+
     flaskThread = threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0", debug=True, use_reloader=False))
     executor.submit(flaskThread.start())
     time.sleep(15)
-    executor.submit(producerThread.start)
-    executor.submit(consumerThread.start)
+
+    producerThread.start()
+    consumerThread.start()
     
     
    

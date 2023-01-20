@@ -11,6 +11,7 @@ import logging
 
 
 def call_apis(self, topics, news_api, media_api):
+    print("in producer")
     try:
         producer = KafkaProducer(bootstrap_servers=['kafka:29092'],
                                  max_block_ms=100000,
@@ -42,14 +43,19 @@ def call_apis(self, topics, news_api, media_api):
                             print(e)
                         
             for domain in domains:
-                source_info = media_api.get_source_domain_info(domain)
+
+                source_info = None
+
+                if media_api != None:
+                    source_info = media_api.get_source_domain_info(domain)
+
                 if source_info:
                     future_s = producer.send("sources",key=domain.encode(), value={"source_name": domain, "source_info": source_info})
 
                     try:
                         record_metadata_s = future_s.get(timeout=10)
                         producer.flush()
-                        # print(record_metadata_s)
+                        logging.info(record_metadata_s)
                     except KafkaError as e:
                         # Decide what to do if produce request failed...
                         print(e)
@@ -63,7 +69,17 @@ class KafkaProducerThread:
     def __init__(self, topics,logger):
         self.topics = topics
         self.news_api = NewsApi()
-        self.media_api = MediaWikiApi()
+        self.media_api = None
+        try:
+            self.media_api = MediaWikiApi()
+        except Exception as e:
+            print(f"There was an exception raised! -> {e}. The app will try to re-start this process automatically")
+        finally:
+            try:
+                for _ in range(2):
+                    self.media_api = MediaWikiApi()
+            except Exception as e:
+                print(f"The program could not automatically restart the process -> {e}")
         self.logger = logger
 
     def start(self):
