@@ -9,4 +9,6 @@ pydantic~=1.10.4
 pymediawiki
 beanie~=1.16.8
 networkx~=3.0
-
+# numpy
+# pandas
+# matplotlib

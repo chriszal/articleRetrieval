@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pymongo import MongoClient
 from bson import ObjectId, json_util
 from pymongo.errors import CollectionInvalid
@@ -339,6 +339,36 @@ class Database(object):
         return {
             "status": 200,
             "description": "There was no article with this id"
+        }
+
+    def fetch_articles_by_period(self,days):
+        days_ago = datetime.now() - timedelta(days=days)
+        unix_days_ago = int(days_ago.timestamp())
+        all_articles = []
+        for topic in self.TOPICS:
+            try:
+                cursor = self.db[f"{topic}"].find({"timestamp": {"$gte": int(unix_days_ago)}})
+            except Exception as e:
+                return {
+                    "status": 500,
+                    "data": f"There was an error while trying to fetch the articles for the topic {topic} form the db! Aborting!!!!"
+                }
+
+            for article in cursor:
+                all_articles.append(
+                    {
+                        "id": str(article["_id"]),
+                        "source": str(article["source"]),
+                        "article": str(article['article']),
+                        "author": str(article["author"]),
+                        "timestamp": int(article["timestamp"]),
+                        "topic":str(topic)
+                    }
+                )
+
+        return {
+            "status": 200,
+            "data": all_articles
         }
 
     def fetch_all_articles(self):
