@@ -40,6 +40,8 @@ db = Database()
 # Creating the graph and edges from the articles in the database.
 full_graph = GraphMigration(db, TOPICS)
 full_graph.automatic_updater()
+
+
 @app.route('/')
 def index():
     # user = {
@@ -58,9 +60,12 @@ def index():
         message='Welcome !'
     )
 
+
 '''
  USER'S API METHODS
 '''
+
+
 @app.post("/user/create")
 def create_user_controller():
     data = request.get_json()
@@ -71,6 +76,7 @@ def create_user_controller():
         "satus": 201,
         "data": response,
     }
+
 
 @app.put("/user/edit/keywords")
 def edit_user_keywords_controller():
@@ -84,6 +90,7 @@ def edit_user_keywords_controller():
         "data": response,
     }
 
+
 @app.get('/user/articles')
 def get_articles():
     email = request.args.get("email")
@@ -93,6 +100,7 @@ def get_articles():
     # Return the articles to the user
     return response
 
+
 @app.delete("/user/delete")
 def delete_user_controller():
     email = request.args.get("email")
@@ -101,9 +109,12 @@ def delete_user_controller():
 
     return response
 
+
 '''
  Topics Controllers
 '''
+
+
 @app.put("/topics/add/article")
 def add_articles_to_topic():
     topic = request.args.get("topic")
@@ -112,6 +123,7 @@ def add_articles_to_topic():
     response = db.insert_article(topic, data)
 
     return response
+
 
 # @app.get("/topics/articles/<string:keyword>")
 # def fetch_users_articles_controller(user_keyword):
@@ -141,9 +153,16 @@ def add_articles_to_topic():
 def fetch_all_articles_with_id():
     response = db.fetch_all_articles()
 
-
-
     return response
+
+
+@app.put('/test/articles/insert')
+def insert_article_to_db():
+    data = request.get_json()
+
+    resp = db.insert_article("science", data)
+
+    return resp
 
 
 @app.get('/test/updateg')
@@ -158,9 +177,10 @@ def update_graph():
             "satus": 500,
             "description": str(e)
         }
+
+
 @app.get('/articles/visualize')
 def visualize_articles():
-    
     response = db.fetch_articles_by_period(5)
 
     articles = response['data']
@@ -180,13 +200,12 @@ def visualize_articles():
         if height > 0:
             ax.text(label_x, label_y, label_text, ha='center', va='center', fontsize=8)
 
-       
-
     # Save plot to file
     plt.savefig('plot.png')
 
     # Serve the file using Flask
     return send_file('plot.png', mimetype='image/png')
+
 
 @app.get('/user/articles/recommend')
 def fetch_recommendation():
@@ -229,8 +248,8 @@ def fetch_recommendation():
                 "User Article": user_article
             }
 
-    #Here we are recomending something because we did not had any lack with the other mechanism.
-    #This is an extreme corner case. And we try to recomend something instead of nothing.
+    # Here we are recomending something because we did not had any lack with the other mechanism.
+    # This is an extreme corner case. And we try to recomend something instead of nothing.
     return {
         "status": 200,
         "Recommendation Article": db.find_article_by_id(list(sorted_dict.items())[0][0])["data"],
@@ -253,6 +272,7 @@ def fetch_recommendation():
     # }
     # test node id -> "63c5b4aafd77d015069e499f"
 
+
 """
     Helper Functions
 """
@@ -261,7 +281,7 @@ if __name__ == "__main__":
     # Creating a new connection with mongo
     # threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0",debug=True,use_reloader=False)).start()
     executor = ThreadPoolExecutor(max_workers=3)
-    producerThread = KafkaProducerThread(TOPICS,logging)
+    producerThread = KafkaProducerThread(TOPICS, logging)
     consumerThread = KafkaConsumerThread(TOPICS, db, logging, full_graph.update_graph)
 
     flaskThread = threading.Thread(target=lambda: app.run(port=8080, host="0.0.0.0", debug=True, use_reloader=False))
@@ -270,7 +290,3 @@ if __name__ == "__main__":
 
     producerThread.start()
     consumerThread.start()
-    
-    
-   
-   

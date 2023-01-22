@@ -284,7 +284,12 @@ class Database(object):
     #### Topics Functions ####
     def insert_article(self, topic, articles):
         try:
-            self.db[f'{topic}'].insert_many(articles)
+            if self.db[f'{topic}'].count_documents({'timestamp': articles[0]['timestamp']}, limit=1) != 0:
+                logging.info(f"DEN YPARXOUNNNN!!! ARAAA DOULEVEIII")
+
+            if self.db[f'{topic}'].count_documents({'timestamp': articles[0]['timestamp']}, limit=1) == 0:
+                self.db[f'{topic}'].insert_many(articles)
+
             return {
                 "status": 200,
                 "data": "The articles added successfully"
