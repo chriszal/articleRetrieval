@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, send_file
 from datetime import datetime, timedelta
-# import pandas as pd
-# from matplotlib import pyplot as plt
+import pandas as pd
+from matplotlib import pyplot as plt
 from kafka_bus.kafkaProducerThread import KafkaProducerThread
 from kafka_bus.kafkaConsumerThread import KafkaConsumerThread
 from concurrent.futures import ThreadPoolExecutor
@@ -161,33 +161,32 @@ def update_graph():
 @app.get('/articles/visualize')
 def visualize_articles():
     
-    response = db.fetch_articles_by_period(2)
+    response = db.fetch_articles_by_period(5)
 
-    # articles = response['articles']
+    articles = response['data']
+    df = pd.DataFrame(articles)
+    df['day'] = pd.to_datetime(df['timestamp'], unit='s').dt.date
+    df = df.groupby(['day', 'topic']).size().reset_index(name='count')
+    df = df.pivot(index='day', columns='topic', values='count')
+    ax = df.plot(kind='bar', stacked=True, figsize=(12, 8), rot='horizontal')
+    for rect in ax.patches:
+        height = rect.get_height()
+        width = rect.get_width()
+        x = rect.get_x()
+        y = rect.get_y()
+        label_text = f'{height}'
+        label_x = x + width / 2
+        label_y = y + height / 2
+        if height > 0:
+            ax.text(label_x, label_y, label_text, ha='center', va='center', fontsize=8)
 
-    # df = pd.DataFrame(articles)
-    # df['day'] = pd.to_datetime(df['timestamp'], unit='s').dt.date
-    # df = df.groupby(['day', 'topic']).size().reset_index(name='count')
-    # ax = df.plot(x='day', y='count', stacked=True, kind='bar', figsize=(12, 8), rot='horizontal')
-    # for rect in ax.patches:
-    #     height = rect.get_height()
-    #     width = rect.get_width()
-    #     x = rect.get_x()
-    #     y = rect.get_y()
-    #     label_text = f'{height}'
-    #     label_x = x + width / 2
-    #     label_y = y + height / 2
-    #     if height > 0:
-    #         ax.text(label_x, label_y, label_text, ha='center', va='center', fontsize=8)
-    # ax.legend(bbox_to_anchor=(1, 1))
+       
 
-    # # Save plot to file
-    # plt.savefig('plot.png')
+    # Save plot to file
+    plt.savefig('plot.png')
 
-    # # Serve the file using Flask
-    # return send_file('plot.png', mimetype='image/png')
     # Serve the file using Flask
-    return response
+    return send_file('plot.png', mimetype='image/png')
 
 @app.get('/user/articles/recommend')
 def fetch_recommendation():
